@@ -11,11 +11,15 @@ and do not need to live in this package.
 """
 
 from lingualdub.components.code_switch.base import CodeSwitchComponent
+from lingualdub.components.code_switch.blender import AudioBlendingComponent
 from lingualdub.components.code_switch.dummy import DummyCodeSwitchComponent
 from lingualdub.components.code_switch.heuristic import HeuristicLIDComponent
+from lingualdub.components.code_switch.neural_lid import NeuralLIDComponent
 
 __all__ = [
+    "AudioBlendingComponent",
     "CodeSwitchComponent",
     "DummyCodeSwitchComponent",
     "HeuristicLIDComponent",
+    "NeuralLIDComponent",
 ]

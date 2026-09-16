@@ -92,6 +92,73 @@ class NeuralLIDComponent(CodeSwitchComponent):
             pass
         return self.default_language, 0.5
 
+    def _split_mixed_segment(self, seg: Segment, default_lang: str) -> list[Segment]:
+        """Split a segment into language-pure sub-segments if code-switching is detected."""
+        text = (seg.text or "").strip()
+        tokens = text.split()
+        if len(tokens) <= 1:
+            dominant_lang, conf = self.classify_text(text)
+            return [
+                seg.replace(
+                    language=dominant_lang,
+                    confidence=seg.confidence or conf,
+                    metadata={**seg.metadata, "lid_confidence": conf, "neural_lid_used": True},
+                )
+            ]
+
+        # Classify sub-clause blocks (e.g. pairs of words or tokens)
+        spans: list[tuple[str, list[str]]] = []
+        for word in tokens:
+            w_lang, _ = self.classify_text(word)
+            if not spans or spans[-1][0] != w_lang:
+                spans.append((w_lang, [word]))
+            else:
+                spans[-1][1].append(word)
+
+        if len(spans) <= 1:
+            dominant_lang, conf = self.classify_text(text)
+            return [
+                seg.replace(
+                    language=dominant_lang,
+                    confidence=seg.confidence or conf,
+                    metadata={**seg.metadata, "lid_confidence": conf, "neural_lid_used": True},
+                )
+            ]
+
+        # Multiple language spans detected -> split temporally
+        duration = max(0.1, seg.end - seg.start)
+        total_words = len(tokens)
+        sub_segments: list[Segment] = []
+        curr_start = seg.start
+
+        for idx, (span_lang, span_words) in enumerate(spans):
+            span_frac = len(span_words) / total_words
+            span_dur = duration * span_frac
+            span_end = seg.end if idx == len(spans) - 1 else curr_start + span_dur
+            span_text = " ".join(span_words)
+
+            sub_segments.append(
+                Segment(
+                    start=round(curr_start, 6),
+                    end=round(span_end, 6),
+                    text=span_text,
+                    language=span_lang,
+                    source_language=seg.source_language,
+                    speaker=seg.speaker,
+                    confidence=seg.confidence,
+                    provenance={**seg.provenance, "neural_lid_split": f"{self.name}@{self.version}"},
+                    metadata={
+                        **seg.metadata,
+                        "code_switch_split": True,
+                        "span_index": idx,
+                        "span_language": span_lang,
+                    },
+                )
+            )
+            curr_start = span_end
+
+        return sub_segments
+
     def run(self, input: Result | Resource) -> Result:
         if not isinstance(input, Result):
             raise ValueError(f"NeuralLIDComponent expects a Result input, got {type(input).__name__}")
@@ -100,27 +167,28 @@ class NeuralLIDComponent(CodeSwitchComponent):
         code_switch_count = 0
 
         for seg in input.segments:
-            # We can classify per word if split_segments is true, but that's slow with transformers.
-            # Usually, you'd chunk it. For simplicity, we classify the whole segment here.
-            dominant_lang, conf = self.classify_text(seg.text or "")
-            
-            # If it's a long segment and split_segments is True, we could split by punctuation
-            # and classify sub-segments. Here we just do whole-segment as a baseline upgrade.
-            updated_seg = Segment(
-                start=seg.start,
-                end=seg.end,
-                text=seg.text,
-                language=dominant_lang,
-                source_language=seg.source_language or input.source_language,
-                speaker=seg.speaker,
-                confidence=seg.confidence or conf,
-                metadata={
-                    **seg.metadata,
-                    "lid_confidence": conf,
-                    "neural_lid_used": True,
-                },
-            )
-            processed_segments.append(updated_seg)
+            if self.split_segments:
+                split_segs = self._split_mixed_segment(seg, self.default_language)
+                if len(split_segs) > 1:
+                    code_switch_count += 1
+                processed_segments.extend(split_segs)
+            else:
+                dominant_lang, conf = self.classify_text(seg.text or "")
+                updated_seg = Segment(
+                    start=seg.start,
+                    end=seg.end,
+                    text=seg.text,
+                    language=dominant_lang,
+                    source_language=seg.source_language or input.source_language,
+                    speaker=seg.speaker,
+                    confidence=seg.confidence or conf,
+                    metadata={
+                        **seg.metadata,
+                        "lid_confidence": conf,
+                        "neural_lid_used": True,
+                    },
+                )
+                processed_segments.append(updated_seg)
 
         res = Result(
             segments=processed_segments,

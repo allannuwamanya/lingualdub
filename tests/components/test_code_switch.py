@@ -89,3 +89,46 @@ def test_code_switch_degrade_path():
 
     assert degraded.status == ResultStatus.DEGRADED
     assert any("degraded" in w.lower() for w in degraded.warnings)
+
+
+def test_audio_blender_component(tmp_path):
+    from pathlib import Path
+    from lingualdub.components.code_switch.blender import AudioBlendingComponent, _write_wav_samples
+
+    # Create two dummy wav files
+    wav1 = tmp_path / "seg1.wav"
+    wav2 = tmp_path / "seg2.wav"
+    _write_wav_samples(wav1, [0.1] * 8000, sample_rate=16000)
+    _write_wav_samples(wav2, [-0.1] * 8000, sample_rate=16000)
+
+    blender = AudioBlendingComponent(output_dir=str(tmp_path / "out"), crossfade_ms=50.0)
+    inp = Result(
+        segments=[
+            Segment(start=0.0, end=0.5, text="Hello", language="eng"),
+            Segment(start=0.5, end=1.0, text="Otya", language="lug"),
+        ],
+        artifacts=[str(wav1), str(wav2)],
+    )
+
+    out = blender.run(inp)
+    assert out.metadata.get("audio_blended") is True
+    assert len(out.artifacts) == 3
+    blended_file = Path(out.artifacts[0])
+    assert blended_file.exists()
+    assert blended_file.stat().st_size > 0
+
+
+def test_neural_lid_component_fallback():
+    from lingualdub.components.code_switch.neural_lid import NeuralLIDComponent
+
+    lid = NeuralLIDComponent(split_segments=True, default_language="lug")
+    inp = Result(
+        segments=[
+            Segment(start=0.0, end=2.0, text="Hello world and greetings", language="und"),
+        ],
+        source_language="lug",
+    )
+    out = lid.run(inp)
+    assert len(out.segments) >= 1
+    assert "lid_component" in out.provenance
+
