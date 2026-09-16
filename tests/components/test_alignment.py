@@ -329,3 +329,53 @@ class TestDummyTTSStrategies:
         mms = MMSTTSComponent()
         assert "duration_target" in mms.requires
         assert "translation" in mms.requires
+
+
+class TestAudioTimeStretchComponent:
+    def test_time_stretch_fits_duration(self, tmp_path):
+        from pathlib import Path
+        from lingualdub.components.alignment.time_stretch import (
+            AudioTimeStretchComponent,
+            _write_wav_samples,
+            _get_wav_duration_and_samples,
+        )
+
+        # 1.0 second of audio at 16kHz
+        wav_path = tmp_path / "audio_seg0.wav"
+        _write_wav_samples(wav_path, [0.05] * 16000, sample_rate=16000)
+
+        # Segment specifies target_duration = 0.5s (2x compression / speedup)
+        seg = Segment(
+            start=0.0,
+            end=1.0,
+            text="hello world",
+            language="eng",
+            metadata={"target_duration": 0.5},
+        )
+        inp = Result(
+            segments=[seg],
+            source_language="lug",
+            target_language="eng",
+            artifacts=[str(wav_path)],
+        )
+
+        stretcher = AudioTimeStretchComponent(output_dir=str(tmp_path / "stretched"))
+        out = stretcher.run(inp)
+
+        assert out.metadata.get("duration_fitted") is True
+        assert out.segments[0].metadata.get("time_stretched") is True
+        stretched_wav = Path(out.artifacts[0])
+        assert stretched_wav.exists()
+        dur, _, _ = _get_wav_duration_and_samples(stretched_wav)
+        # Verify stretched audio is close to target (0.5s)
+        assert abs(dur - 0.5) < 0.2
+
+    def test_degrade_path(self):
+        from lingualdub.components.alignment.time_stretch import AudioTimeStretchComponent
+        from lingualdub.core.result import ResultStatus
+
+        stretcher = AudioTimeStretchComponent()
+        inp = Result(segments=[], artifacts=[])
+        deg = stretcher.degrade(inp)
+        assert deg.status == ResultStatus.DEGRADED
+

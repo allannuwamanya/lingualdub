@@ -12,8 +12,12 @@ and do not need to live in this package.
 
 from lingualdub.components.alignment.duration import DurationModellingComponent
 from lingualdub.components.alignment.forced import DummyForcedAlignmentComponent
+from lingualdub.components.alignment.neural import NeuralForcedAlignmentComponent
+from lingualdub.components.alignment.time_stretch import AudioTimeStretchComponent
 
 __all__ = [
+    "AudioTimeStretchComponent",
     "DummyForcedAlignmentComponent",
     "DurationModellingComponent",
+    "NeuralForcedAlignmentComponent",
 ]
