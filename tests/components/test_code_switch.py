@@ -93,6 +93,7 @@ def test_code_switch_degrade_path():
 
 def test_audio_blender_component(tmp_path):
     from pathlib import Path
+
     from lingualdub.components.code_switch.blender import AudioBlendingComponent, _write_wav_samples
 
     # Create two dummy wav files
@@ -131,4 +132,3 @@ def test_neural_lid_component_fallback():
     out = lid.run(inp)
     assert len(out.segments) >= 1
     assert "lid_component" in out.provenance
-

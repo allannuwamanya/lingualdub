@@ -28,8 +28,10 @@ from lingualdub.lifecycle import FrameworkLifecycle, startup_hook
 
 lc = FrameworkLifecycle()
 
+
 @lc.startup_hook("init_registry", depends_on=["init_config"])
 def init_registry(): ...
+
 
 lc.register_startup_hook("init_config", lambda: ..., depends_on=None)
 lc.run_startup_hooks()  # topological order (Kahn), deterministic tie-break by registration order
@@ -45,6 +47,7 @@ Module-level `@startup_hook(name, depends_on)` attaches `_lingualdub_startup_hoo
 ```python
 @lc.shutdown_hook("cleanup_tmp")
 def cleanup(): ...
+
 
 lc.shutdown()  # SHUTTING_DOWN → STOPPED, idempotent, handles partial init
 ```

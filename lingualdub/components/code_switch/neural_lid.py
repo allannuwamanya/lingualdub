@@ -11,6 +11,7 @@ identify language boundaries in mixed-language utterances.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from lingualdub.components.code_switch.base import CodeSwitchComponent
 from lingualdub.core.component import ComponentTask, FailureMode
@@ -49,7 +50,7 @@ class NeuralLIDComponent(CodeSwitchComponent):
         self.confidence_threshold = confidence_threshold
         self.version = version
         self.device = device
-        self._pipeline = None
+        self._pipeline: Any = None
 
     def _load_model(self) -> None:
         if self._pipeline is not None:
@@ -63,7 +64,7 @@ class NeuralLIDComponent(CodeSwitchComponent):
             self._pipeline = pipeline("text-classification", model=self.model_name, device=device)
         except Exception as exc:
             logger.warning("Failed to load Neural LID model: %s", exc)
-            self._pipeline = "failed"
+            self._pipeline = False
 
     def _map_lang_code(self, model_label: str) -> str:
         """Map standard 2-letter ISO to our framework 3-letter codes."""
@@ -73,15 +74,15 @@ class NeuralLIDComponent(CodeSwitchComponent):
             "fr": "fra",
             "de": "deu",
             # Add heuristics for Luganda/Runyankole as they might be predicted as 'sw' or others
-            # depending on the model. 
+            # depending on the model.
         }
         return mapping.get(model_label, self.default_language)
 
     def classify_text(self, text: str) -> tuple[str, float]:
         self._load_model()
-        if self._pipeline == "failed" or not self._pipeline:
+        if not self._pipeline or self._pipeline is False:
             return self.default_language, 0.5
-        
+
         try:
             res = self._pipeline(text[:512], truncation=True)
             if res and isinstance(res, list):
@@ -146,7 +147,10 @@ class NeuralLIDComponent(CodeSwitchComponent):
                     source_language=seg.source_language,
                     speaker=seg.speaker,
                     confidence=seg.confidence,
-                    provenance={**seg.provenance, "neural_lid_split": f"{self.name}@{self.version}"},
+                    provenance={
+                        **seg.provenance,
+                        "neural_lid_split": f"{self.name}@{self.version}",
+                    },
                     metadata={
                         **seg.metadata,
                         "code_switch_split": True,
@@ -161,7 +165,9 @@ class NeuralLIDComponent(CodeSwitchComponent):
 
     def run(self, input: Result | Resource) -> Result:
         if not isinstance(input, Result):
-            raise ValueError(f"NeuralLIDComponent expects a Result input, got {type(input).__name__}")
+            raise ValueError(
+                f"NeuralLIDComponent expects a Result input, got {type(input).__name__}"
+            )
 
         processed_segments: list[Segment] = []
         code_switch_count = 0

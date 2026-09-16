@@ -23,7 +23,6 @@ from lingualdub.components.eval.base import EvaluatorComponent
 from lingualdub.core.component import ComponentTask, FailureMode
 from lingualdub.core.resource import Resource
 from lingualdub.core.result import Result
-from lingualdub.core.segment import Segment
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +143,9 @@ class DataFlywheelComponent(EvaluatorComponent):
                     "target_language": input.target_language,
                     "confidence": conf,
                     "audio_snippet": snippet_path_str,
-                    "flag_reason": "low_confidence" if is_low_conf else ("unfit" if is_unfit else "zero_duration"),
+                    "flag_reason": "low_confidence"
+                    if is_low_conf
+                    else ("unfit" if is_unfit else "zero_duration"),
                     "metadata": seg.metadata,
                     "provenance": seg.provenance,
                 }

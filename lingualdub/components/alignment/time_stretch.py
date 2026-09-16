@@ -16,7 +16,6 @@ import struct
 import tempfile
 import wave
 from pathlib import Path
-from typing import Any
 
 from lingualdub.components.alignment.base import AlignmentComponent
 from lingualdub.core.component import ComponentTask, FailureMode
@@ -153,7 +152,9 @@ class AudioTimeStretchComponent(AlignmentComponent):
         self.tolerance_sec = tolerance_sec
         self.version = version
         self.output_dir = (
-            Path(output_dir) if output_dir else Path(tempfile.gettempdir()) / "lingualdub_time_stretch"
+            Path(output_dir)
+            if output_dir
+            else Path(tempfile.gettempdir()) / "lingualdub_time_stretch"
         )
 
     def _stretch_audio_file(
@@ -182,8 +183,12 @@ class AudioTimeStretchComponent(AlignmentComponent):
             import subprocess
 
             cmd = [
-                "ffmpeg", "-y", "-i", str(input_path),
-                "-filter:a", f"atempo={clamped_rate:.4f}",
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(input_path),
+                "-filter:a",
+                f"atempo={clamped_rate:.4f}",
                 str(output_path),
             ]
             res = subprocess.run(cmd, capture_output=True, timeout=10)
@@ -225,7 +230,9 @@ class AudioTimeStretchComponent(AlignmentComponent):
 
             if matching_art is not None and target_dur > 0:
                 out_path = self.output_dir / f"stretched_seg_{idx}_{self.version}.wav"
-                did_stretch, final_dur = self._stretch_audio_file(matching_art, out_path, target_dur)
+                did_stretch, final_dur = self._stretch_audio_file(
+                    matching_art, out_path, target_dur
+                )
 
                 if did_stretch:
                     stretched_count += 1

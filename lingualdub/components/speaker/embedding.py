@@ -214,11 +214,15 @@ class SpeakerEmbeddingComponent(SpeakerComponent):
                     embed_tensor = neural_model.encode_batch(signal)
                     embedding = embed_tensor.squeeze().tolist()
                 except Exception as e:
-                    logger.warning("Neural embedding failed (%s), falling back to deterministic.", e)
+                    logger.warning(
+                        "Neural embedding failed (%s), falling back to deterministic.", e
+                    )
                     key = self._extract_key(input)
                     embedding = _deterministic_embedding(key, self.embedding_dim)
             else:
-                logger.warning("No audio found for neural embedding, falling back to deterministic.")
+                logger.warning(
+                    "No audio found for neural embedding, falling back to deterministic."
+                )
                 key = self._extract_key(input)
                 embedding = _deterministic_embedding(key, self.embedding_dim)
         else:

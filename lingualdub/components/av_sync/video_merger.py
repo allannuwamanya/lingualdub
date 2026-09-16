@@ -97,9 +97,9 @@ def _try_ffmpeg_merge(
     Requires ffmpeg binary in PATH.
     """
     try:
+        import os
         import subprocess
         import tempfile
-        import os
 
         # Concatenate multiple audio files into one intermediate file if needed
         merged_audio = audio_paths[0]
@@ -110,11 +110,20 @@ def _try_ffmpeg_merge(
                     # ffmpeg concat demuxer requires 'file path' syntax
                     f.write(f"file '{Path(p).absolute()}'\n")
                 concat_list_path = f.name
-            
+
             temp_audio = Path(tempfile.gettempdir()) / f"merged_audio_{os.getpid()}.wav"
             concat_cmd = [
-                "ffmpeg", "-y", "-f", "concat", "-safe", "0", 
-                "-i", concat_list_path, "-c", "copy", str(temp_audio)
+                "ffmpeg",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                concat_list_path,
+                "-c",
+                "copy",
+                str(temp_audio),
             ]
             subprocess.run(concat_cmd, capture_output=True, check=True)
             merged_audio = str(temp_audio)
@@ -136,7 +145,7 @@ def _try_ffmpeg_merge(
         ]
 
         result = subprocess.run(cmd, capture_output=True, timeout=30)
-        
+
         # Cleanup temporary audio if created
         if temp_audio and temp_audio.exists():
             os.remove(temp_audio)

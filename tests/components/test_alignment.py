@@ -334,10 +334,11 @@ class TestDummyTTSStrategies:
 class TestAudioTimeStretchComponent:
     def test_time_stretch_fits_duration(self, tmp_path):
         from pathlib import Path
+
         from lingualdub.components.alignment.time_stretch import (
             AudioTimeStretchComponent,
-            _write_wav_samples,
             _get_wav_duration_and_samples,
+            _write_wav_samples,
         )
 
         # 1.0 second of audio at 16kHz
@@ -378,4 +379,3 @@ class TestAudioTimeStretchComponent:
         inp = Result(segments=[], artifacts=[])
         deg = stretcher.degrade(inp)
         assert deg.status == ResultStatus.DEGRADED
-

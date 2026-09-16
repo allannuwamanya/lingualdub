@@ -49,7 +49,8 @@ def _detect_cues_from_video(
 
     # 1. Attempt PySceneDetect (Robust Content-Aware Detection)
     try:
-        from scenedetect import detect, ContentDetector
+        from scenedetect import ContentDetector, detect
+
         scene_list = detect(str(video_path), ContentDetector())
         for start_time, _ in scene_list:
             cues.append(round(start_time.get_seconds(), 3))

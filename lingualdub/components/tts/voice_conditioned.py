@@ -322,7 +322,11 @@ class VoiceConditionedTTSComponent(TTSComponent):
 
         # Check for reference audio path in input or speaker_reference
         speaker_wav_path: str | None = None
-        if self.speaker_reference and self.speaker_reference.path and Path(str(self.speaker_reference.path)).exists():
+        if (
+            self.speaker_reference
+            and self.speaker_reference.path
+            and Path(str(self.speaker_reference.path)).exists()
+        ):
             speaker_wav_path = str(self.speaker_reference.path)
         elif input.artifacts:
             for art in input.artifacts:

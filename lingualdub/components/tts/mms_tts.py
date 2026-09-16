@@ -95,7 +95,7 @@ class MMSTTSComponent(TTSComponent):
 
             logger.info("Loading MMS-TTS model %r on %s", self.model_name_or_path, device)
             self._tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path)
-            self._model = VitsModel.from_pretrained(self.model_name_or_path).to(device)
+            self._model = VitsModel.from_pretrained(self.model_name_or_path).to(device)  # type: ignore[arg-type]
 
     def run(self, input: Result | Resource) -> Result:
         if not isinstance(input, Result):

@@ -17,7 +17,6 @@ import struct
 import tempfile
 import wave
 from pathlib import Path
-from typing import Any
 
 from lingualdub.core.component import Component, ComponentTask, FailureMode
 from lingualdub.core.resource import Resource
@@ -199,7 +198,9 @@ class AudioBlendingComponent(Component):
                     merged_samples, samples, crossfade_samples, curve=self.curve
                 )
 
-        output_file = self.output_dir / f"blended_codeswitch_{self.version}_{len(audio_paths)}segs.wav"
+        output_file = (
+            self.output_dir / f"blended_codeswitch_{self.version}_{len(audio_paths)}segs.wav"
+        )
         _write_wav_samples(output_file, merged_samples, self.sample_rate)
 
         new_artifacts = [str(output_file)] + list(input.artifacts)

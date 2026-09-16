@@ -3,10 +3,9 @@ Unit tests for Milestone 13 — Data Flywheel Evaluator.
 """
 
 import json
-from pathlib import Path
 
-from lingualdub.components.eval.flywheel import DataFlywheelComponent, _snip_wav
 from lingualdub.components.alignment.time_stretch import _write_wav_samples
+from lingualdub.components.eval.flywheel import DataFlywheelComponent, _snip_wav
 from lingualdub.core.result import Result
 from lingualdub.core.segment import Segment
 
@@ -52,7 +51,7 @@ def test_data_flywheel_flags_low_confidence(tmp_path):
     # Verify JSONL export
     jsonl_file = tmp_path / "flywheel_out" / "test_dataset.jsonl"
     assert jsonl_file.exists()
-    with open(jsonl_file, "r", encoding="utf-8") as f:
+    with open(jsonl_file, encoding="utf-8") as f:
         lines = f.readlines()
     assert len(lines) == 1
     record = json.loads(lines[0])

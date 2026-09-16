@@ -398,5 +398,3 @@ class TestSpeakerSimilarityEvaluator:
         out = comp.run(res)
         assert len(out.metadata["speaker_embedding"]) == 192
         assert out.metadata["speaker_embedding"][0] == 0.1
-
-

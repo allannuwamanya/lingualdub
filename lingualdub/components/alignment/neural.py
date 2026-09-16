@@ -36,7 +36,9 @@ def _distribute_word_timestamps(words: list[str], seg_start: float, seg_end: flo
         frac = len(word) / total_chars
         word_dur = duration * frac
         word_start = round(cursor, 6)
-        word_end = round(seg_end, 6) if i == len(words) - 1 else round(min(cursor + word_dur, seg_end), 6)
+        word_end = (
+            round(seg_end, 6) if i == len(words) - 1 else round(min(cursor + word_dur, seg_end), 6)
+        )
         timestamps.append({"word": word, "start": word_start, "end": word_end})
         cursor = word_end
     return timestamps
@@ -81,14 +83,17 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
         device = self.device or ("cuda:0" if torch.cuda.is_available() else "cpu")
         logger.info("Loading Wav2Vec2 CTC aligner model %r on %s", self.model_name, device)
         self._processor = Wav2Vec2Processor.from_pretrained(self.model_name)
-        self._model = Wav2Vec2ForCTC.from_pretrained(self.model_name).to(device)
+        self._model = Wav2Vec2ForCTC.from_pretrained(self.model_name).to(device)  # type: ignore[arg-type]
 
     def _get_audio_path(self, input_obj: Result) -> str | None:
         # Check artifacts
         for art in input_obj.artifacts:
-            if isinstance(art, str) and Path(art).suffix.lower() in (".wav", ".mp3", ".flac"):
-                if Path(art).exists():
-                    return art
+            if (
+                isinstance(art, str)
+                and Path(art).suffix.lower() in (".wav", ".mp3", ".flac")
+                and Path(art).exists()
+            ):
+                return art
         # Check provenance
         val = input_obj.provenance.get("audio_path") or input_obj.provenance.get("path")
         if isinstance(val, str) and Path(val).exists():
@@ -100,7 +105,7 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
             raise ValueError(f"{self.name} expects a Result, got {type(input).__name__}")
 
         audio_path = self._get_audio_path(input)
-        
+
         # Try neural alignment if audio exists, else fallback to dummy distribute
         neural_failed = False
         aligned_segments: list[Segment] = []
@@ -109,21 +114,22 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
             try:
                 import torch
                 import torchaudio
+
                 self._load_model()
-                
+
                 device = next(self._model.parameters()).device
                 waveform, sr = torchaudio.load(audio_path)
-                
+
                 if sr != 16000:
                     waveform = torchaudio.functional.resample(waveform, sr, 16000)
                     sr = 16000
-                
+
                 # Single channel
                 if waveform.shape[0] > 1:
                     waveform = waveform.mean(dim=0, keepdim=True)
-                
+
                 waveform = waveform.squeeze(0).to(device)
-                
+
                 # We align segment by segment rather than whole file for simplicity
                 for seg in input.segments:
                     # Snip audio for segment
@@ -133,9 +139,9 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                     start_sample = max(0, min(start_sample, waveform.shape[0]))
                     end_sample = max(start_sample + 1, min(end_sample, waveform.shape[0]))
                     seg_wav = waveform[start_sample:end_sample]
-                    
+
                     text = (seg.text or "").strip().upper()
-                    
+
                     if not text or len(seg_wav) < 400:
                         # Too short or empty, just use dummy
                         word_timestamps = _distribute_word_timestamps(
@@ -148,8 +154,8 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                                 inputs = self._processor(
                                     seg_wav.cpu().numpy(), sampling_rate=sr, return_tensors="pt"
                                 ).to(device)
-                                logits = self._model(**inputs).logits
-                            
+                                _ = self._model(**inputs).logits
+
                             # Get word timestamps using processor's decode or simply fallback
                             # Since exact CTC forced alignment logic is complex to write manually without
                             # torchaudio.functional.forced_align which requires explicit dictionary mapping,
@@ -165,13 +171,13 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                             if hasattr(torchaudio.functional, "forced_align"):
                                 # We would use forced_align here, but it requires dictionary.
                                 pass
-                                
+
                         except Exception as e:
                             logger.warning("Neural alignment failed for segment: %s", e)
                             word_timestamps = _distribute_word_timestamps(
                                 (seg.text or "").split(), seg.start, seg.end
                             )
-                    
+
                     new_meta = dict(seg.metadata)
                     new_meta["word_timestamps"] = word_timestamps
                     new_meta["aligned"] = True
@@ -187,7 +193,7 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                         metadata=new_meta,
                     )
                     aligned_segments.append(aligned_seg)
-                    
+
             except Exception as e:
                 logger.warning("Neural alignment model load/run failed: %s", e)
                 neural_failed = True
@@ -209,7 +215,10 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                     speaker=seg.speaker,
                     confidence=seg.confidence,
                     source_language=seg.source_language,
-                    provenance={**seg.provenance, "aligner": f"{self.name}@{self.version}_fallback"},
+                    provenance={
+                        **seg.provenance,
+                        "aligner": f"{self.name}@{self.version}_fallback",
+                    },
                     metadata=new_meta,
                 )
                 aligned_segments.append(aligned_seg)
