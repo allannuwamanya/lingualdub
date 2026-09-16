@@ -12,8 +12,12 @@ and do not need to live in this package.
 
 from lingualdub.components.eval.av_sync import AVSyncEvaluator
 from lingualdub.components.eval.base import EvaluatorComponent
+from lingualdub.components.eval.flywheel import DataFlywheelComponent
+from lingualdub.components.eval.speaker_similarity import SpeakerSimilarityEvaluator
 
 __all__: list[str] = [
-    "EvaluatorComponent",
     "AVSyncEvaluator",
+    "DataFlywheelComponent",
+    "EvaluatorComponent",
+    "SpeakerSimilarityEvaluator",
 ]
