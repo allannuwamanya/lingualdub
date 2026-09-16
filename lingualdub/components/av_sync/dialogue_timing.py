@@ -47,7 +47,19 @@ def _detect_cues_from_video(
     if not video_path or not Path(str(video_path)).exists():
         return cues
 
-    # Attempt OpenCV scene cut detection
+    # 1. Attempt PySceneDetect (Robust Content-Aware Detection)
+    try:
+        from scenedetect import detect, ContentDetector
+        scene_list = detect(str(video_path), ContentDetector())
+        for start_time, _ in scene_list:
+            cues.append(round(start_time.get_seconds(), 3))
+        if cues:
+            logger.info("Detected %d scene-cut cues from video via PySceneDetect", len(cues))
+            return sorted(set(cues))
+    except Exception as exc:
+        logger.debug("PySceneDetect unavailable or failed (%s), trying OpenCV", exc)
+
+    # 2. Attempt OpenCV scene cut detection (Simple Heuristic Fallback)
     try:
         import cv2  # type: ignore
 
@@ -65,7 +77,8 @@ def _detect_cues_from_video(
                     hist = cv2.calcHist([frame], [0], None, [32], [0, 256])
                     if prev_hist is not None:
                         diff = float(cv2.compareHist(prev_hist, hist, cv2.HISTCMP_BHATTACHARYYA))
-                        if diff > 0.35:  # threshold for scene cut
+                        # Use dynamic or more conservative threshold
+                        if diff > 0.45:  # more conservative threshold for scene cut
                             cues.append(round(frame_idx / fps, 3))
                     prev_hist = hist
                 frame_idx += 1

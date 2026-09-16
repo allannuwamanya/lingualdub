@@ -94,79 +94,58 @@ def _try_ffmpeg_merge(
     Attempt to merge audio + video via ffmpeg.
 
     Returns True if successful, False otherwise (caller should fallback).
-    Requires ffmpeg binary in PATH or ffmpeg-python.
+    Requires ffmpeg binary in PATH.
     """
-    # Try ffmpeg-python first
-    try:
-        import ffmpeg  # type: ignore
-
-        # If multiple audio files, concatenate them first via ffmpeg concat
-        if len(audio_paths) == 1:
-            audio_input = ffmpeg.input(audio_paths[0])
-        else:
-            # Use concat filter for multiple wavs
-            _inputs = [ffmpeg.input(p) for p in audio_paths]  # noqa: F841
-            # Simplified: just use first audio for offline deterministic; full concat is complex
-            audio_input = ffmpeg.input(audio_paths[0])
-            logger.debug("Multiple audio files: using first for ffmpeg merge (offline fallback)")
-
-        video_input = ffmpeg.input(source_video)
-        out = ffmpeg.output(
-            video_input,
-            audio_input,
-            str(output_path),
-            vcodec="copy",
-            acodec="aac",
-            shortest=None,
-        )
-        out.run(quiet=True, overwrite_output=True)
-        if output_path.exists() and output_path.stat().st_size > 0:
-            logger.info("Merged video via ffmpeg-python: %s", output_path)
-            return True
-    except Exception as exc:
-        logger.debug("ffmpeg-python merge failed (%s), trying subprocess ffmpeg", exc)
-
-    # Try subprocess ffmpeg directly
     try:
         import subprocess
+        import tempfile
+        import os
 
-        if len(audio_paths) == 1:
-            cmd = [
-                "ffmpeg",
-                "-y",
-                "-i",
-                source_video,
-                "-i",
-                audio_paths[0],
-                "-c:v",
-                "copy",
-                "-c:a",
-                "aac",
-                "-shortest",
-                str(output_path),
+        # Concatenate multiple audio files into one intermediate file if needed
+        merged_audio = audio_paths[0]
+        temp_audio = None
+        if len(audio_paths) > 1:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+                for p in audio_paths:
+                    # ffmpeg concat demuxer requires 'file path' syntax
+                    f.write(f"file '{Path(p).absolute()}'\n")
+                concat_list_path = f.name
+            
+            temp_audio = Path(tempfile.gettempdir()) / f"merged_audio_{os.getpid()}.wav"
+            concat_cmd = [
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0", 
+                "-i", concat_list_path, "-c", "copy", str(temp_audio)
             ]
-        else:
-            # Concatenate audios via filter_complex for subprocess path
-            # Fallback: just mix first audio
-            cmd = [
-                "ffmpeg",
-                "-y",
-                "-i",
-                source_video,
-                "-i",
-                audio_paths[0],
-                "-c:v",
-                "copy",
-                "-c:a",
-                "aac",
-                "-shortest",
-                str(output_path),
-            ]
+            subprocess.run(concat_cmd, capture_output=True, check=True)
+            merged_audio = str(temp_audio)
+            os.remove(concat_list_path)
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            source_video,
+            "-i",
+            merged_audio,
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-shortest",
+            str(output_path),
+        ]
 
         result = subprocess.run(cmd, capture_output=True, timeout=30)
+        
+        # Cleanup temporary audio if created
+        if temp_audio and temp_audio.exists():
+            os.remove(temp_audio)
+
         if result.returncode == 0 and output_path.exists():
             logger.info("Merged video via ffmpeg subprocess: %s", output_path)
             return True
+        else:
+            logger.debug("ffmpeg merge failed: %s", result.stderr.decode("utf-8", "ignore"))
     except Exception as exc:
         logger.debug("ffmpeg subprocess merge failed (%s)", exc)
 

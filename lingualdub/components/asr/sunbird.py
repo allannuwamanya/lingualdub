@@ -130,13 +130,14 @@ class SunbirdASRComponent(ASRComponent):
             "Accept": "application/json",
         }
 
-        # Sunbird STT API call
-        with open(audio_path, "rb") as f:
-            audio_bytes = f.read()
+        file_size = os.path.getsize(audio_path)
+        headers["Content-Length"] = str(file_size)
 
-        req = urllib.request.Request(api_url, data=audio_bytes, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        # Pass file handle directly to allow urllib to stream the data
+        with open(audio_path, "rb") as f:
+            req = urllib.request.Request(api_url, data=f, headers=headers, method="POST")
+            with urllib.request.urlopen(req) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
 
         text = data.get("text", "").strip()
         segments = [
