@@ -252,6 +252,49 @@ class VoiceConditionedTTSComponent(TTSComponent):
         # 5. Fallback deterministic default
         return _deterministic_embedding("default_voice_conditioned", dim=192)
 
+    def _synthesize_voice_segment(
+        self,
+        dest: Path,
+        text: str,
+        duration_sec: float,
+        freq_hz: float,
+        speaker_wav: str | None = None,
+    ) -> None:
+        """Synthesize voice segment using neural TTS model if available, else deterministic fallback."""
+        if self._model is not None and text.strip():
+            try:
+                ref_wav = speaker_wav
+                if not ref_wav and self.speaker_reference and self.speaker_reference.path:
+                    ref_wav = str(self.speaker_reference.path)
+
+                if ref_wav and Path(ref_wav).exists():
+                    self._model.tts_to_file(
+                        text=text.strip(),
+                        speaker_wav=ref_wav,
+                        language=self.language,
+                        file_path=str(dest),
+                    )
+                    if dest.exists() and dest.stat().st_size > 0:
+                        return
+                else:
+                    self._model.tts_to_file(
+                        text=text.strip(),
+                        language=self.language,
+                        file_path=str(dest),
+                    )
+                    if dest.exists() and dest.stat().st_size > 0:
+                        return
+            except Exception as exc:
+                logger.debug("Neural TTS synthesis failed (%s), using deterministic fallback.", exc)
+
+        _copy_or_generate_voice_wav(
+            dest,
+            self.speaker_reference,
+            duration_sec,
+            freq_hz,
+            sample_rate=self.sample_rate,
+        )
+
     def run(self, input: Result | Resource) -> Result:
         if not isinstance(input, Result):
             raise ValueError(  # justified: component input validation — not a framework config error
@@ -277,8 +320,15 @@ class VoiceConditionedTTSComponent(TTSComponent):
         # Determine conditioning frequency
         cond_freq = _freq_from_embedding(speaker_emb, base=440.0)
 
-        # Check that input Result has translation capability (segments should have translated text)
-        # We don't strictly validate here; pipeline assembly already checks requires.
+        # Check for reference audio path in input or speaker_reference
+        speaker_wav_path: str | None = None
+        if self.speaker_reference and self.speaker_reference.path and Path(str(self.speaker_reference.path)).exists():
+            speaker_wav_path = str(self.speaker_reference.path)
+        elif input.artifacts:
+            for art in input.artifacts:
+                if str(art).lower().endswith((".wav", ".mp3", ".flac")) and Path(str(art)).exists():
+                    speaker_wav_path = str(art)
+                    break
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
         artifacts: list[str] = list(input.artifacts)
@@ -307,12 +357,12 @@ class VoiceConditionedTTSComponent(TTSComponent):
                 if strategy == FittingStrategy.COMPRESS:
                     audio_dur = max(target_dur, 0.1)
                     audio_path = self.output_dir / f"voice_tts_segment_{idx}_{self.version}.wav"
-                    _copy_or_generate_voice_wav(
+                    self._synthesize_voice_segment(
                         audio_path,
-                        self.speaker_reference,
+                        text,
                         audio_dur,
                         cond_freq + idx * 10,
-                        sample_rate=self.sample_rate,
+                        speaker_wav=speaker_wav_path,
                     )
                     artifacts.append(str(audio_path))
                     out_segments.append(
@@ -343,12 +393,12 @@ class VoiceConditionedTTSComponent(TTSComponent):
                             self.output_dir
                             / f"voice_tts_segment_{idx}_split_{sub_idx}_{self.version}.wav"
                         )
-                        _copy_or_generate_voice_wav(
+                        self._synthesize_voice_segment(
                             audio_path,
-                            self.speaker_reference,
+                            part,
                             sub_dur,
                             cond_freq + idx * 10,
-                            sample_rate=self.sample_rate,
+                            speaker_wav=speaker_wav_path,
                         )
                         artifacts.append(str(audio_path))
                         sub_meta = dict(new_meta)
@@ -394,8 +444,12 @@ class VoiceConditionedTTSComponent(TTSComponent):
         else:
             # Utterance fallback
             audio_path = self.output_dir / f"voice_tts_output_{self.version}.wav"
-            _copy_or_generate_voice_wav(
-                audio_path, self.speaker_reference, 2.0, cond_freq, sample_rate=self.sample_rate
+            self._synthesize_voice_segment(
+                audio_path,
+                "",
+                2.0,
+                cond_freq,
+                speaker_wav=speaker_wav_path,
             )
             artifacts.append(str(audio_path))
 

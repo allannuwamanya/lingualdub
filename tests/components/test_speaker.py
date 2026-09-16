@@ -349,3 +349,54 @@ class TestSpeakerSimilarityEvaluator:
             out = SpeakerSimilarityEvaluator().evaluate_pair(hyp, ref)
             score = out.metadata["metrics"]["speaker_similarity"]
             assert 0.0 <= score <= 1.0
+
+    def test_mock_neural_speaker_extraction(self, tmp_path, monkeypatch):
+        import sys
+        import types
+
+        class MockTensor:
+            def squeeze(self):
+                return self
+
+            def tolist(self):
+                return [0.1] * 192
+
+        class MockEncoderClassifier:
+            @classmethod
+            def from_hparams(cls, source, run_opts=None):
+                return cls()
+
+            def encode_batch(self, signal):
+                return MockTensor()
+
+        class MockSignal:
+            shape = [1, 16000]
+
+            def mean(self, dim=0, keepdim=True):
+                return self
+
+        mock_torchaudio = types.ModuleType("torchaudio")
+        mock_torchaudio.load = lambda p: (MockSignal(), 16000)
+        monkeypatch.setitem(sys.modules, "torchaudio", mock_torchaudio)
+
+        monkeypatch.setattr(
+            "lingualdub.components.speaker.embedding.SpeakerEmbeddingComponent._load_neural_model",
+            lambda self: MockEncoderClassifier(),
+        )
+
+        wav = tmp_path / "speaker.wav"
+        _make_wav(wav)
+        res = Resource(
+            id="spk_res",
+            kind=ResourceKind.SPEECH,
+            language="lug",
+            version="1.0.0",
+            path=str(wav),
+            provenance={"consent_basis": "research_evaluation"},
+        )
+        comp = SpeakerEmbeddingComponent(embedding_dim=192)
+        out = comp.run(res)
+        assert len(out.metadata["speaker_embedding"]) == 192
+        assert out.metadata["speaker_embedding"][0] == 0.1
+
+

@@ -188,14 +188,39 @@ class SpeakerEmbeddingComponent(SpeakerComponent):
         neural_model = self._load_neural_model()
         embedding: list[float]
         if neural_model is not None:
-            # Neural path: would extract real embedding, but we still use deterministic
-            # for testing determinism; log and use deterministic to ensure repeatability
-            # In production, replace this branch with actual inference.
-            logger.debug(
-                "Neural model loaded but using deterministic embedding for reproducibility in tests."
-            )
-            key = self._extract_key(input)
-            embedding = _deterministic_embedding(key, self.embedding_dim)
+            logger.info("Using real neural speaker embedding inference via SpeechBrain.")
+            audio_path = None
+            if isinstance(input, Resource) and input.path:
+                audio_path = str(input.path)
+            elif isinstance(input, Result) and input.artifacts:
+                for art in input.artifacts:
+                    if str(art).lower().endswith((".wav", ".mp3", ".flac")):
+                        audio_path = str(art)
+                        break
+
+            if audio_path and Path(audio_path).exists():
+                try:
+                    import torchaudio
+
+                    signal, fs = torchaudio.load(audio_path)
+                    # Convert to mono if needed
+                    if signal.shape[0] > 1:
+                        signal = signal.mean(dim=0, keepdim=True)
+                    # Resample to 16kHz for ECAPA-TDNN
+                    if fs != 16000:
+                        signal = torchaudio.functional.resample(signal, fs, 16000)
+
+                    # SpeechBrain encode_batch returns tensor of shape [batch, 1, channels]
+                    embed_tensor = neural_model.encode_batch(signal)
+                    embedding = embed_tensor.squeeze().tolist()
+                except Exception as e:
+                    logger.warning("Neural embedding failed (%s), falling back to deterministic.", e)
+                    key = self._extract_key(input)
+                    embedding = _deterministic_embedding(key, self.embedding_dim)
+            else:
+                logger.warning("No audio found for neural embedding, falling back to deterministic.")
+                key = self._extract_key(input)
+                embedding = _deterministic_embedding(key, self.embedding_dim)
         else:
             key = self._extract_key(input)
             embedding = _deterministic_embedding(key, self.embedding_dim)
