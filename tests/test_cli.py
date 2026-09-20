@@ -105,3 +105,73 @@ def test_cli_no_subcommand(capsys):
     assert ret == 0
     out = capsys.readouterr().out
     assert "LingualDub" in out
+
+
+def test_cli_dub_missing_input():
+    ret = main(["dub", "-i", "nonexistent_video.mp4", "-s", "eng", "-t", "lug"])
+    assert ret == 1
+
+
+def test_cli_dub_mock_pipeline(tmp_path):
+    vid_file = tmp_path / "test_input.mp4"
+    vid_file.write_bytes(b"dummy video data")
+    out_dir = tmp_path / "dub_out"
+
+    ret = main(
+        [
+            "dub",
+            "-i",
+            str(vid_file),
+            "-s",
+            "eng",
+            "-t",
+            "lug",
+            "--mock",
+            "-o",
+            str(out_dir),
+        ]
+    )
+    assert ret == 0
+    assert (out_dir / "results.json").exists()
+
+    # Check results content
+    with open(out_dir / "results.json", encoding="utf-8") as f:
+        data = json.load(f)
+    assert data["source_language"] == "eng"
+    assert data["target_language"] == "lug"
+    assert any(a.endswith(".mp4") for a in data["artifacts"])
+    assert any(a.endswith(".srt") for a in data["artifacts"])
+
+
+def test_cli_dub_with_config(tmp_path):
+    vid_file = tmp_path / "test_input2.mp4"
+    vid_file.write_bytes(b"dummy video data")
+    out_dir = tmp_path / "dub_out_cfg"
+
+    ret = main(
+        [
+            "dub",
+            "-i",
+            str(vid_file),
+            "-s",
+            "lug",
+            "-t",
+            "eng",
+            "--config",
+            "configs/av_sync_mock_pipeline.yaml",
+            "-o",
+            str(out_dir),
+        ]
+    )
+    assert ret == 0
+    assert (out_dir / "results.json").exists()
+
+
+def test_cli_new_components_in_registry():
+    from lingualdub.cli import get_default_registry
+
+    reg = get_default_registry()
+    components = [k for k, _ in reg.list("component")]
+    assert "audio_blender" in components
+    assert "audio_time_stretcher" in components
+    assert "data_flywheel" in components

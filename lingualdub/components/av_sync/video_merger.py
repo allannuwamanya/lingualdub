@@ -84,14 +84,50 @@ def _resolve_source_video(input: Result) -> str | None:
     return None
 
 
+def _format_srt_time(seconds: float) -> str:
+    """Format seconds into SRT timestamp format: HH:MM:SS,mmm."""
+    seconds = max(0.0, float(seconds))
+    total_ms = int(round(seconds * 1000))
+    hours = total_ms // 3600000
+    remainder = total_ms % 3600000
+    minutes = remainder // 60000
+    remainder = remainder % 60000
+    secs = remainder // 1000
+    millis = remainder % 1000
+    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
+
+
+def _generate_srt(segments: list[Segment], output_path: Path) -> bool:
+    """Generate a SubRip (.srt) subtitle file from segment text and timestamps."""
+    if not segments:
+        return False
+    lines: list[str] = []
+    idx = 1
+    for seg in segments:
+        text = (seg.text or "").strip()
+        if not text:
+            continue
+        start_str = _format_srt_time(seg.start)
+        end_str = _format_srt_time(seg.end)
+        lines.append(f"{idx}\n{start_str} --> {end_str}\n{text}\n")
+        idx += 1
+    if not lines:
+        return False
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines).strip() + "\n")
+    return True
+
+
 def _try_ffmpeg_merge(
     source_video: str,
     audio_paths: list[str],
     output_path: Path,
+    subtitles_path: Path | None = None,
     duration_sec: float | None = None,
 ) -> bool:
     """
-    Attempt to merge audio + video via ffmpeg.
+    Attempt to merge audio + video + optional subtitles via ffmpeg.
 
     Returns True if successful, False otherwise (caller should fallback).
     Requires ffmpeg binary in PATH.
@@ -136,15 +172,51 @@ def _try_ffmpeg_merge(
             source_video,
             "-i",
             merged_audio,
-            "-c:v",
-            "copy",
-            "-c:a",
-            "aac",
-            "-shortest",
-            str(output_path),
         ]
 
+        has_subs = subtitles_path is not None and Path(subtitles_path).exists()
+        if has_subs:
+            cmd.extend(["-i", str(subtitles_path)])
+
+        cmd.extend(
+            [
+                "-c:v",
+                "copy",
+                "-c:a",
+                "aac",
+            ]
+        )
+
+        if has_subs:
+            cmd.extend(["-c:s", "mov_text"])
+
+        cmd.extend(
+            [
+                "-shortest",
+                str(output_path),
+            ]
+        )
+
         result = subprocess.run(cmd, capture_output=True, timeout=30)
+
+        # If merge with subtitles failed, try fallback without subtitles
+        if result.returncode != 0 and has_subs:
+            logger.debug("ffmpeg merge with subtitles failed; retrying without subtitles...")
+            fallback_cmd = [
+                "ffmpeg",
+                "-y",
+                "-i",
+                source_video,
+                "-i",
+                merged_audio,
+                "-c:v",
+                "copy",
+                "-c:a",
+                "aac",
+                "-shortest",
+                str(output_path),
+            ]
+            result = subprocess.run(fallback_cmd, capture_output=True, timeout=30)
 
         # Cleanup temporary audio if created
         if temp_audio and temp_audio.exists():
@@ -182,7 +254,7 @@ class VideoMergerComponent(Component):
     task: ComponentTask = ComponentTask.VIDEO
     supported_languages: list[str] = ["lug", "nyn", "eng", "swa"]
     requires: list[str] = ["synthesised_audio"]
-    provides: list[str] = ["dubbed_video"]
+    provides: list[str] = ["dubbed_video", "subtitles"]
     on_failure: FailureMode = FailureMode.DEGRADE
 
     def __init__(
@@ -282,11 +354,22 @@ class VideoMergerComponent(Component):
         hex_hash = hashlib.sha256(hash_input.encode()).hexdigest()[:8]
         output_path = self.output_dir / f"dubbed_video_{hex_hash}_{self.version}.mp4"
 
+        # Generate subtitles if segments exist
+        subtitles_file: Path | None = None
+        if input.segments:
+            srt_path = self.output_dir / f"subtitles_{hex_hash}_{self.version}.srt"
+            if _generate_srt(input.segments, srt_path):
+                subtitles_file = srt_path
+
         # Try real ffmpeg merge if both video and audio available
         merged = False
         if source_video and audio_paths:
             merged = _try_ffmpeg_merge(
-                source_video, audio_paths, output_path, duration_sec=total_dur
+                source_video,
+                audio_paths,
+                output_path,
+                subtitles_path=subtitles_file,
+                duration_sec=total_dur,
             )
 
         # Fallback: dummy MP4 generation (always succeeds offline)
@@ -337,6 +420,8 @@ class VideoMergerComponent(Component):
         new_provenance["video_merger"] = f"{self.name}@{self.version}"
         new_provenance["dubbed_video"] = str(output_path)
         new_provenance["dubbed_video_version"] = self.version
+        if subtitles_file and subtitles_file.exists():
+            new_provenance["subtitles"] = str(subtitles_file)
         if source_video:
             new_provenance["source_video"] = str(source_video)
             new_provenance["source_video_ref"] = str(source_video)
@@ -347,11 +432,16 @@ class VideoMergerComponent(Component):
         if "run_id" not in new_provenance:
             new_provenance["run_id"] = hashlib.sha256(hash_input.encode()).hexdigest()[:12]
 
-        new_artifacts = list(input.artifacts) + [str(output_path)]
+        new_artifacts = list(input.artifacts)
+        if subtitles_file and subtitles_file.exists():
+            new_artifacts.append(str(subtitles_file))
+        new_artifacts.append(str(output_path))
         new_metadata = dict(input.metadata)
         new_metadata["dubbed_video"] = str(output_path)
         new_metadata["dubbed_video_artifact"] = str(output_path)
         new_metadata["video_codec"] = self.video_codec
+        if subtitles_file and subtitles_file.exists():
+            new_metadata["subtitles"] = str(subtitles_file)
 
         return Result(
             segments=out_segments if input.segments else list(input.segments),

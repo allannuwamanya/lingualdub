@@ -307,3 +307,23 @@ class TestVideoMergerComponent:
         out2 = comp.run(inp)
         # Same input -> same output path (content hash)
         assert out1.artifacts[-1] == out2.artifacts[-1]
+
+    def test_subtitles_generation_and_muxing(self, tmp_path):
+        seg1 = _seg("Hello, welcome to the show.", 0.0, 2.5, lang="eng")
+        seg2 = _seg("We are dubbing into Luganda.", 2.6, 5.0, lang="lug")
+        inp = _res(seg1, seg2, prov={"consent_basis": "research"})
+        comp = VideoMergerComponent(output_dir=str(tmp_path / "subs_test"))
+        out = comp.run(inp)
+
+        # Verify SRT artifact is produced and non-empty
+        srt_arts = [a for a in out.artifacts if a.endswith(".srt")]
+        assert len(srt_arts) == 1
+        srt_path = Path(srt_arts[0])
+        assert srt_path.exists()
+        srt_content = srt_path.read_text(encoding="utf-8")
+        assert "00:00:00,000 --> 00:00:02,500" in srt_content
+        assert "Hello, welcome to the show." in srt_content
+        assert "00:00:02,600 --> 00:00:05,000" in srt_content
+        assert "We are dubbing into Luganda." in srt_content
+        assert "subtitles" in out.metadata
+        assert "subtitles" in out.provenance

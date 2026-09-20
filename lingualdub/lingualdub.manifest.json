@@ -365,6 +365,61 @@
         "kind": "parallel_text",
         "language": "nyn"
       }
+    },
+    {
+      "kind": "component",
+      "key": "neural_forced_aligner",
+      "module": "lingualdub.components.alignment.neural",
+      "attr": "NeuralForcedAlignmentComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "alignment",
+        "type": "neural"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "neural_lid",
+      "module": "lingualdub.components.code_switch.neural_lid",
+      "attr": "NeuralLIDComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "code_switch",
+        "type": "neural"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "audio_blender",
+      "module": "lingualdub.components.code_switch.blender",
+      "attr": "AudioBlendingComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "code_switch",
+        "type": "blender"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "audio_time_stretcher",
+      "module": "lingualdub.components.alignment.time_stretch",
+      "attr": "AudioTimeStretchComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "alignment",
+        "type": "time_stretch"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "data_flywheel",
+      "module": "lingualdub.components.eval.flywheel",
+      "attr": "DataFlywheelComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "eval",
+        "type": "flywheel"
+      }
     }
   ]
 }

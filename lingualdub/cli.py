@@ -97,7 +97,21 @@ def get_default_registry() -> ld.Registry:
     registry.register("component", "dummy_code_switch", DummyCodeSwitchComponent, version="1.0.0")
     registry.register("component", "heuristic_lid", HeuristicLIDComponent, version="1.0.0")
 
-    # Register alignment components (M4)
+    try:
+        from lingualdub.components.code_switch.neural_lid import NeuralLIDComponent
+
+        registry.register("component", "neural_lid", NeuralLIDComponent, version="1.0.0")
+    except Exception:
+        pass
+
+    try:
+        from lingualdub.components.code_switch.blender import AudioBlendingComponent
+
+        registry.register("component", "audio_blender", AudioBlendingComponent, version="1.0.0")
+    except Exception:
+        pass
+
+    # Register alignment components (M4, M12)
     from lingualdub.components.alignment.duration import DurationModellingComponent
     from lingualdub.components.alignment.forced import DummyForcedAlignmentComponent
 
@@ -105,6 +119,24 @@ def get_default_registry() -> ld.Registry:
         "component", "dummy_forced_aligner", DummyForcedAlignmentComponent, version="1.0.0"
     )
     registry.register("component", "duration_modeller", DurationModellingComponent, version="1.0.0")
+
+    try:
+        from lingualdub.components.alignment.neural import NeuralForcedAlignmentComponent
+
+        registry.register(
+            "component", "neural_forced_aligner", NeuralForcedAlignmentComponent, version="1.0.0"
+        )
+    except Exception:
+        pass
+
+    try:
+        from lingualdub.components.alignment.time_stretch import AudioTimeStretchComponent
+
+        registry.register(
+            "component", "audio_time_stretcher", AudioTimeStretchComponent, version="1.0.0"
+        )
+    except Exception:
+        pass
 
     # Register timing resource for forced aligner (M4.1)
     from lingualdub.resources.eval_sets import DUMMY_TIMING_RESOURCE
@@ -117,6 +149,13 @@ def get_default_registry() -> ld.Registry:
     registry.register(
         "component", "temporal_alignment_evaluator", TemporalAlignmentEvaluator, version="1.0.0"
     )
+
+    try:
+        from lingualdub.components.eval.flywheel import DataFlywheelComponent
+
+        registry.register("component", "data_flywheel", DataFlywheelComponent, version="1.0.0")
+    except Exception:
+        pass
 
     # Register speaker components (M5)
     from lingualdub.components.eval.speaker_similarity import SpeakerSimilarityEvaluator
@@ -386,6 +425,199 @@ def cmd_experiment_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _extract_audio_from_video(video_path: Path, output_audio_path: Path) -> bool:
+    """Extract audio from video file to 16kHz mono WAV using ffmpeg."""
+    try:
+        import subprocess
+
+        output_audio_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(video_path),
+            "-vn",
+            "-acodec",
+            "pcm_s16le",
+            "-ar",
+            "16000",
+            "-ac",
+            "1",
+            str(output_audio_path),
+        ]
+        res = subprocess.run(cmd, capture_output=True, timeout=30)
+        return res.returncode == 0 and output_audio_path.exists()
+    except Exception:
+        return False
+
+
+def cmd_dub(args: argparse.Namespace) -> int:
+    """Dub a video into a target language with audio-visual sync and subtitles."""
+    video_path = Path(args.input_video)
+    if not video_path.exists():
+        logger.error("Input video file not found: %s", video_path)
+        return 1
+
+    registry = get_default_registry()
+    loader = ConfigLoader(registry)
+
+    import tempfile
+
+    out_dir = (
+        Path(args.output_dir)
+        if args.output_dir
+        else Path(tempfile.gettempdir()) / f"lingualdub_dub_{video_path.stem}"
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if getattr(args, "config", None):
+        cfg_path = Path(args.config)
+        if not cfg_path.exists():
+            logger.error("Configuration file not found: %s", cfg_path)
+            return 1
+        try:
+            pipeline = loader.load_file(cfg_path)
+        except Exception as exc:
+            logger.error("Failed to load pipeline from %s: %s", cfg_path, exc)
+            return 1
+    else:
+        use_mock = getattr(args, "mock", False)
+
+        def _is_reg(k: str) -> bool:
+            try:
+                registry.resolve("component", k)
+                return True
+            except Exception:
+                return False
+
+        asr_key = (
+            "dummy_asr" if use_mock else ("whisper_asr" if _is_reg("whisper_asr") else "dummy_asr")
+        )
+        align_key = (
+            "dummy_forced_aligner"
+            if use_mock
+            else (
+                "neural_forced_aligner"
+                if _is_reg("neural_forced_aligner")
+                else "dummy_forced_aligner"
+            )
+        )
+        trans_key = (
+            "dummy_translator"
+            if use_mock
+            else (
+                "hf_translator"
+                if _is_reg("hf_translator")
+                else ("sunbird_translator" if _is_reg("sunbird_translator") else "dummy_translator")
+            )
+        )
+        tts_key = (
+            "dummy_tts"
+            if use_mock
+            else (
+                "voice_conditioned_tts"
+                if _is_reg("voice_conditioned_tts")
+                else ("mms_tts" if _is_reg("mms_tts") else "dummy_tts")
+            )
+        )
+
+        stages = [
+            {
+                "kind": "component",
+                "key": asr_key,
+                "version": "1.0.0",
+                "params": {"language": args.source},
+            },
+            {"kind": "component", "key": align_key, "version": "1.0.0"},
+            {
+                "kind": "component",
+                "key": trans_key,
+                "version": "1.0.0",
+                "params": {"source_language": args.source, "target_language": args.target},
+            },
+            {"kind": "component", "key": "duration_modeller", "version": "1.0.0"},
+            {"kind": "component", "key": "dialogue_timing", "version": "1.0.0"},
+            {"kind": "component", "key": tts_key, "version": "1.0.0"},
+            {"kind": "component", "key": "video_merger", "version": "1.0.0"},
+        ]
+
+        pipeline_def = {
+            "name": f"dub_{args.source}_to_{args.target}",
+            "source_language": args.source,
+            "target_language": args.target,
+            "on_stage_failure": "degrade",
+            "stages": stages,
+        }
+
+        try:
+            pipeline = loader.load_dict(pipeline_def)
+        except Exception as exc:
+            logger.error("Failed to assemble default dubbing pipeline: %s", exc)
+            return 1
+
+    logger.info(
+        "Dubbing video %s [%s -> %s] (pipeline: %s, stages: %s)",
+        video_path.name,
+        pipeline.source_language,
+        pipeline.target_language or "N/A",
+        pipeline.name or "unnamed",
+        pipeline.stage_names,
+    )
+
+    # Extract audio or prepare input resource
+    extracted_audio = out_dir / f"{video_path.stem}_audio.wav"
+    audio_extracted = _extract_audio_from_video(video_path, extracted_audio)
+
+    input_path = str(extracted_audio.absolute()) if audio_extracted else str(video_path.absolute())
+    input_kind = ld.ResourceKind.SPEECH if audio_extracted else ld.ResourceKind.VIDEO
+
+    input_obj = ld.Resource(
+        id=f"dub_input_{video_path.stem}",
+        kind=input_kind,
+        language=pipeline.source_language,
+        version="1.0.0",
+        path=input_path,
+        provenance={
+            "consent_basis": "user_provided",
+            "source_video": str(video_path.absolute()),
+        },
+    )
+
+    executor = ld.PipelineExecutor(pipeline)
+    try:
+        result = executor.run(input_obj)
+    except Exception as exc:
+        logger.error("Dubbing execution failed: %s", exc)
+        return 1
+
+    logger.info("Dubbing completed with status: %s", result.status.value.upper())
+    for s in result.segments:
+        logger.info("  [%0.2fs -> %0.2fs] (%s): %s", s.start, s.end, s.language or "-", s.text)
+
+    # Locate outputs
+    dubbed_video = None
+    subtitles_file = None
+    for art in result.artifacts:
+        if isinstance(art, str):
+            if art.endswith(".mp4"):
+                dubbed_video = art
+            elif art.endswith(".srt"):
+                subtitles_file = art
+
+    if dubbed_video:
+        logger.info("✓ Dubbed video generated: %s", dubbed_video)
+    if subtitles_file:
+        logger.info("✓ Subtitles generated: %s", subtitles_file)
+
+    # Save results json
+    results_file = out_dir / "results.json"
+    with open(results_file, "w", encoding="utf-8") as f:
+        json.dump(result.to_dict(), f, indent=2)
+    logger.info("Results saved to: %s", results_file)
+
+    return 0
+
+
 def cmd_registry_list(args: argparse.Namespace) -> int:
     """List registered framework items."""
     registry = get_default_registry()
@@ -415,6 +647,34 @@ def main(argv: list[str] | None = None) -> int:
         description="LingualDub — Speech-AI Framework for Low-Resource Languages",
     )
     subparsers = parser.add_subparsers(dest="subcommand", help="Available subcommands")
+
+    # lingualdub dub ...
+    dub_parser = subparsers.add_parser(
+        "dub", help="Dub a video into a target language with audio-visual sync and subtitles"
+    )
+    dub_parser.add_argument("--input-video", "-i", required=True, help="Path to input video file")
+    dub_parser.add_argument(
+        "--source", "-s", default="eng", help="Source language code (e.g. eng, lug; default: eng)"
+    )
+    dub_parser.add_argument(
+        "--target",
+        "-t",
+        default="lug",
+        help="Target language code (e.g. lug, nyn, eng; default: lug)",
+    )
+    dub_parser.add_argument(
+        "--output-dir", "-o", help="Output directory to save results, video, and subtitles"
+    )
+    dub_parser.add_argument(
+        "--mock",
+        "--fast",
+        action="store_true",
+        dest="mock",
+        help="Use lightweight mock components for fast testing",
+    )
+    dub_parser.add_argument(
+        "--config", "-c", help="Optional pipeline config YAML to override default stages"
+    )
 
     # lingualdub experiment run ...
     exp_parser = subparsers.add_parser("experiment", help="Experiment commands")
@@ -448,7 +708,9 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
-    if args.subcommand == "experiment" and args.exp_subcommand == "run":
+    if args.subcommand == "dub":
+        return cmd_dub(args)
+    elif args.subcommand == "experiment" and args.exp_subcommand == "run":
         return cmd_experiment_run(args)
     elif args.subcommand == "registry" and args.reg_subcommand == "list":
         return cmd_registry_list(args)
