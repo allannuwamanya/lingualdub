@@ -125,20 +125,26 @@ LingualDub uses **GitHub as the bridge** between local development and cloud GPU
 ### Running via CLI
 
 ```bash
-# 1. Inspect registered components and languages
+# 1. End-to-End Video Dubbing (Extracts audio, translates, synthesizes, and muxes subtitles)
+lingualdub dub input_video.mp4 \
+  --target-lang lug \
+  --output dubbed_video.mp4 \
+  --mock  # Remove --mock to run full neural pipeline
+
+# 2. Inspect registered components and languages
 lingualdub registry list
 
-# 2. Run a local pipeline test (generic to any text/language)
+# 3. Run a local pipeline test (generic to any text/language)
 lingualdub experiment run configs/local_mock_pipeline.yaml \
   --sample-text "Oli otya nnyabo" \
   --output-dir experiments/local_test
 
-# 3. Run a real GPU experiment on Colab (e.g. reference baseline)
+# 4. Run a real GPU experiment on Colab (e.g. reference baseline)
 lingualdub experiment run configs/luganda_english_baseline.yaml \
   --input-audio data/samples/sample_lug.wav \
   --output-dir experiments/luganda_dubbing/baseline_v1
 
-# 4. Compare metric deltas across two runs
+# 5. Compare metric deltas across two runs
 lingualdub compare \
   --baseline experiments/luganda_dubbing/baseline_v1/results.json \
   --candidate experiments/luganda_dubbing/run_v2/results.json
