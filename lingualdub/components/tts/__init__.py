@@ -13,6 +13,9 @@ and do not need to live in this package.
 from lingualdub.components.tts.base import FittingStrategy, TTSComponent
 from lingualdub.components.tts.dummy import DummyTTSComponent
 from lingualdub.components.tts.mms_tts import MMSTTSComponent
+from lingualdub.components.tts.omnivoice import OmniVoiceTTSComponent
+from lingualdub.components.tts.sherpa_mms import SherpaMMSTTSComponent
+from lingualdub.components.tts.sunbird import SunbirdTTSComponent
 from lingualdub.components.tts.voice_conditioned import VoiceConditionedTTSComponent
 
 __all__: list[str] = [
@@ -20,5 +23,8 @@ __all__: list[str] = [
     "TTSComponent",
     "DummyTTSComponent",
     "MMSTTSComponent",
+    "OmniVoiceTTSComponent",
+    "SherpaMMSTTSComponent",
+    "SunbirdTTSComponent",
     "VoiceConditionedTTSComponent",
 ]

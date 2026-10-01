@@ -60,6 +60,18 @@
     },
     {
       "kind": "component",
+      "key": "faster_whisper_asr",
+      "module": "lingualdub.components.asr.faster_whisper",
+      "attr": "FasterWhisperASRComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "asr",
+        "type": "quantized_local",
+        "format": "ctranslate2_int8"
+      }
+    },
+    {
+      "kind": "component",
       "key": "dummy_translator",
       "module": "lingualdub.components.translation.dummy",
       "attr": "DummyTranslationComponent",
@@ -94,6 +106,18 @@
     },
     {
       "kind": "component",
+      "key": "quantized_nllb",
+      "module": "lingualdub.components.translation.quantized_nllb",
+      "attr": "QuantizedNLLBTranslationComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "translation",
+        "type": "quantized_local",
+        "format": "ctranslate2_int8"
+      }
+    },
+    {
+      "kind": "component",
       "key": "dummy_tts",
       "module": "lingualdub.components.tts.dummy",
       "attr": "DummyTTSComponent",
@@ -112,6 +136,42 @@
       "metadata": {
         "task": "tts",
         "type": "neural"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "sunbird_tts",
+      "module": "lingualdub.components.tts.sunbird",
+      "attr": "SunbirdTTSComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "tts",
+        "provider": "sunbird",
+        "type": "neural"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "sherpa_mms_tts",
+      "module": "lingualdub.components.tts.sherpa_mms",
+      "attr": "SherpaMMSTTSComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "tts",
+        "type": "quantized_local",
+        "format": "vits_onnx"
+      }
+    },
+    {
+      "kind": "component",
+      "key": "omnivoice_gguf",
+      "module": "lingualdub.components.tts.omnivoice",
+      "attr": "OmniVoiceTTSComponent",
+      "version": "1.0.0",
+      "metadata": {
+        "task": "tts",
+        "type": "quantized_local",
+        "format": "gguf"
       }
     },
     {

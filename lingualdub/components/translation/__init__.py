@@ -13,6 +13,9 @@ and do not need to live in this package.
 from lingualdub.components.translation.base import TranslationComponent
 from lingualdub.components.translation.dummy import DummyTranslationComponent
 from lingualdub.components.translation.hf_translator import HuggingFaceTranslationComponent
+from lingualdub.components.translation.quantized_nllb import (
+    QuantizedNLLBTranslationComponent,
+)
 from lingualdub.components.translation.sunbird import SunbirdTranslationComponent
 
 __all__: list[str] = [
@@ -20,4 +23,5 @@ __all__: list[str] = [
     "DummyTranslationComponent",
     "HuggingFaceTranslationComponent",
     "SunbirdTranslationComponent",
+    "QuantizedNLLBTranslationComponent",
 ]

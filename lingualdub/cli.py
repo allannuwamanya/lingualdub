@@ -66,6 +66,15 @@ def get_default_registry() -> ld.Registry:
         pass
 
     try:
+        from lingualdub.components.asr.faster_whisper import FasterWhisperASRComponent
+
+        registry.register(
+            "component", "faster_whisper_asr", FasterWhisperASRComponent, version="1.0.0"
+        )
+    except Exception:
+        pass
+
+    try:
         from lingualdub.components.translation.sunbird import SunbirdTranslationComponent
 
         registry.register(
@@ -84,9 +93,41 @@ def get_default_registry() -> ld.Registry:
         pass
 
     try:
+        from lingualdub.components.translation.quantized_nllb import (
+            QuantizedNLLBTranslationComponent,
+        )
+
+        registry.register(
+            "component", "quantized_nllb", QuantizedNLLBTranslationComponent, version="1.0.0"
+        )
+    except Exception:
+        pass
+
+    try:
         from lingualdub.components.tts.mms_tts import MMSTTSComponent
 
         registry.register("component", "mms_tts", MMSTTSComponent, version="1.0.0")
+    except Exception:
+        pass
+
+    try:
+        from lingualdub.components.tts.sunbird import SunbirdTTSComponent
+
+        registry.register("component", "sunbird_tts", SunbirdTTSComponent, version="1.0.0")
+    except Exception:
+        pass
+
+    try:
+        from lingualdub.components.tts.sherpa_mms import SherpaMMSTTSComponent
+
+        registry.register("component", "sherpa_mms_tts", SherpaMMSTTSComponent, version="1.0.0")
+    except Exception:
+        pass
+
+    try:
+        from lingualdub.components.tts.omnivoice import OmniVoiceTTSComponent
+
+        registry.register("component", "omnivoice_gguf", OmniVoiceTTSComponent, version="1.0.0")
     except Exception:
         pass
 
@@ -644,6 +685,30 @@ def cmd_compare(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    """Start the OpenAI & ElevenLabs-compatible African voice HTTP server."""
+    from lingualdub.api.server import create_server
+
+    server = create_server(host=args.host, port=args.port)
+    logger.info("Starting LingualDub Voice AI server on http://%s:%d", args.host, args.port)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        logger.info("Stopping LingualDub server...")
+        server.server_close()
+    return 0
+
+
+def cmd_mcp(args: argparse.Namespace) -> int:
+    """Start the Model Context Protocol (MCP) stdio server for AI agents."""
+    from lingualdub.api.mcp import MCPServer
+
+    logger.info("Starting LingualDub MCP stdio server...")
+    mcp = MCPServer()
+    mcp.run_stdio()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="lingualdub",
@@ -710,6 +775,18 @@ def main(argv: list[str] | None = None) -> int:
         "--candidate", "-c", required=True, help="Path to candidate results.json"
     )
 
+    # lingualdub serve ...
+    serve_parser = subparsers.add_parser(
+        "serve", help="Start the OpenAI & ElevenLabs-compatible African voice HTTP server"
+    )
+    serve_parser.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
+    serve_parser.add_argument("--port", "-p", type=int, default=8000, help="Port (default: 8000)")
+
+    # lingualdub mcp ...
+    subparsers.add_parser(
+        "mcp", help="Start the Model Context Protocol (MCP) server for AI coding agents"
+    )
+
     args = parser.parse_args(argv)
     if args.subcommand == "dub":
         return cmd_dub(args)
@@ -719,6 +796,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_registry_list(args)
     elif args.subcommand == "compare":
         return cmd_compare(args)
+    elif args.subcommand == "serve":
+        return cmd_serve(args)
+    elif args.subcommand == "mcp":
+        return cmd_mcp(args)
     else:
         parser.print_help()
         return 0

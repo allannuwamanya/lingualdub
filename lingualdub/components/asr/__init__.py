@@ -12,6 +12,7 @@ and do not need to live in this package.
 
 from lingualdub.components.asr.base import ASRComponent
 from lingualdub.components.asr.dummy import DummyASRComponent
+from lingualdub.components.asr.faster_whisper import FasterWhisperASRComponent
 from lingualdub.components.asr.runyankole import RunyankoleASRComponent
 from lingualdub.components.asr.sunbird import SunbirdASRComponent
 from lingualdub.components.asr.whisper import WhisperASRComponent
@@ -19,6 +20,7 @@ from lingualdub.components.asr.whisper import WhisperASRComponent
 __all__: list[str] = [
     "ASRComponent",
     "DummyASRComponent",
+    "FasterWhisperASRComponent",
     "RunyankoleASRComponent",
     "SunbirdASRComponent",
     "WhisperASRComponent",
