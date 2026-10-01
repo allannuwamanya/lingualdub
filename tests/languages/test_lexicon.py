@@ -32,3 +32,24 @@ def test_lexicon_unknown_fallback():
     result = translate_with_lexicon("xyz123 unusual_term", "eng", "lug")
     assert "xyz123" in result
     assert "unusual_term" in result
+
+
+def test_lexicon_bidirectional_and_cross_language():
+    # Luganda to English
+    res_lug_eng = translate_with_lexicon("Nnumwa omutwe, njagala eddagala", "lug", "eng")
+    assert "headache" in res_lug_eng.lower()
+    assert "medicine" in res_lug_eng.lower()
+
+    # Luganda to Swahili
+    res_lug_swa = translate_with_lexicon("Nnumwa omutwe, njagala eddagala", "lug", "swa")
+    assert "kichwa" in res_lug_swa.lower()
+    assert "dawa" in res_lug_swa.lower()
+
+    # Swahili to Luganda
+    res_swa_lug = translate_with_lexicon("Hujambo", "swa", "lug")
+    assert "Oli otya" in res_swa_lug
+
+    # Reverse word translation
+    word_rev = translate_with_lexicon("omusawo eddagala", "lug", "eng")
+    assert "doctor" in word_rev
+    assert "medicine" in word_rev

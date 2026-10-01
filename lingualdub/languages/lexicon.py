@@ -128,6 +128,38 @@ PHRASE_TRANSLATIONS: dict[str, dict[str, str]] = {
         "ibo": "Ṅụọ ọgwụ a ugboro abụọ n'ụbọchị",
         "zul": "Thatha lo muthi kabili ngosuku",
     },
+    "i have a headache, i need medicine": {
+        "lug": "Nnumwa omutwe, njagala eddagala",
+        "swa": "Naumwa na kichwa, ninahitaji dawa",
+        "nyn": "Ninsaasibwa omutwe, ninyenda omubazi",
+        "yor": "Orí ń fọ́ mi, mo nílò oògùn",
+        "ibo": "Isi na-awa m, achọrọ m ọgwụ",
+        "zul": "Ngiphathwa yikhanda, ngidinga umuthi",
+    },
+    "i have a headache": {
+        "lug": "Nnumwa omutwe",
+        "swa": "Naumwa na kichwa",
+        "nyn": "Ninsaasibwa omutwe",
+        "yor": "Orí ń fọ́ mi",
+        "ibo": "Isi na-awa m",
+        "zul": "Ngiphathwa yikhanda",
+    },
+    "i need medicine": {
+        "lug": "Njagala eddagala",
+        "swa": "Ninahitaji dawa",
+        "nyn": "Ninyenda omubazi",
+        "yor": "Mo nílò oògùn",
+        "ibo": "Achọrọ m ọgwụ",
+        "zul": "Ngidinga umuthi",
+    },
+    "i need a doctor": {
+        "lug": "Njagala omusawo",
+        "swa": "Ninahitaji daktari",
+        "nyn": "Ninyenda omushaho",
+        "yor": "Mo nílò dókítà",
+        "ibo": "Achọrọ m dọkịta",
+        "zul": "Ngidinga udokotela",
+    },
 }
 
 WORD_DICTIONARY: dict[str, dict[str, str]] = {
@@ -147,33 +179,81 @@ WORD_DICTIONARY: dict[str, dict[str, str]] = {
     "people": {"lug": "abantu", "swa": "watu", "nyn": "abantu", "yor": "eniyan", "ibo": "ndị mmadụ", "zul": "abantu"},
     "voice": {"lug": "eddoboozi", "swa": "sauti", "nyn": "eiraka", "yor": "ohùn", "ibo": "olu", "zul": "izwi"},
     "voices": {"lug": "amaloboozi", "swa": "sauti", "nyn": "amaraka", "yor": "àwọn ohùn", "ibo": "olu", "zul": "amazwi"},
+    "head": {"lug": "omutwe", "swa": "kichwa", "nyn": "omutwe", "yor": "orí", "ibo": "isi", "zul": "ikhanda"},
+    "pain": {"lug": "obulumi", "swa": "maumivu", "nyn": "obusaasi", "yor": "ìrora", "ibo": "mgbu", "zul": "ubuhlungu"},
+    "fever": {"lug": "omusujja", "swa": "homa", "nyn": "omuswija", "yor": "ibà", "ibo": "ahụ ọkụ", "zul": "imfiva"},
 }
+
+
+def _normalize(s: str) -> str:
+    return re.sub(r"[^\w\s]", "", s.lower()).strip()
 
 
 def translate_with_lexicon(text: str, source_language: str, target_language: str) -> str:
     """
-    Translate text using curated African lexicon and phrase patterns.
+    Translate text bidirectionally using curated African lexicon and phrase patterns.
+    Supports English <-> African languages and cross-African translation.
     """
     cleaned = text.strip()
-    norm = re.sub(r"[^\w\s]", "", cleaned.lower()).strip()
+    norm = _normalize(cleaned)
+    is_tgt_eng = target_language.lower() in ("eng", "en")
 
-    # 1. Exact or longest phrase match first
+    # 1. Exact or longest phrase match (bidirectional)
     sorted_phrases = sorted(PHRASE_TRANSLATIONS.items(), key=lambda item: len(item[0]), reverse=True)
+
+    # Check forward match (source is English)
     for phrase, lang_map in sorted_phrases:
-        if (norm == phrase or norm.startswith(phrase)) and target_language in lang_map:
-            return lang_map[target_language]
+        norm_phrase = _normalize(phrase)
+        if norm == norm_phrase or norm.startswith(norm_phrase):
+            if is_tgt_eng:
+                return phrase.capitalize()
+            if target_language in lang_map:
+                return lang_map[target_language]
 
+    # Check reverse / cross-language match (source is African language)
+    for phrase, lang_map in sorted_phrases:
+        for src_lang, src_val in lang_map.items():
+            norm_val = _normalize(src_val)
+            if norm == norm_val or norm.startswith(norm_val):
+                if is_tgt_eng:
+                    return phrase.capitalize()
+                if target_language in lang_map:
+                    return lang_map[target_language]
 
-
-    # 2. Word by word replacement with Bantu syntax preservation
+    # 2. Word by word replacement with bidirectional dictionary
     words = cleaned.split()
     translated_words = []
     for w in words:
         clean_w = re.sub(r"[^\w]", "", w.lower())
         punct = w[len(clean_w):] if len(clean_w) < len(w) else ""
-        if clean_w in WORD_DICTIONARY and target_language in WORD_DICTIONARY[clean_w]:
-            translated_words.append(WORD_DICTIONARY[clean_w][target_language] + punct)
-        else:
+        matched = False
+
+        # Forward match (English word)
+        if clean_w in WORD_DICTIONARY:
+            if is_tgt_eng:
+                translated_words.append(clean_w + punct)
+                matched = True
+            elif target_language in WORD_DICTIONARY[clean_w]:
+                translated_words.append(WORD_DICTIONARY[clean_w][target_language] + punct)
+                matched = True
+
+        # Reverse match (African word)
+        if not matched:
+            for eng_word, lang_dict in WORD_DICTIONARY.items():
+                for s_lang, s_val in lang_dict.items():
+                    if clean_w == _normalize(s_val):
+                        if is_tgt_eng:
+                            translated_words.append(eng_word + punct)
+                            matched = True
+                            break
+                        elif target_language in lang_dict:
+                            translated_words.append(lang_dict[target_language] + punct)
+                            matched = True
+                            break
+                if matched:
+                    break
+
+        if not matched:
             translated_words.append(w)
 
     return " ".join(translated_words)
