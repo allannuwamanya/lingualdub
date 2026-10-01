@@ -109,11 +109,39 @@ class ConversationalVoiceAgent:
         self.llm_responder = llm_responder or self._default_responder
 
     def _default_responder(self, user_text: str, history: list[ConversationTurn]) -> str:
-        """Default rule-based African conversational greeting fallback."""
+        """Intelligent African conversational responder handling healthcare, greetings, and queries."""
         text_lower = user_text.lower().strip()
-        if any(g in text_lower for g in ("oli otya", "wasuze", "ki kati", "hujambo")):
-            return "Gyendi bulungi nnyabo, tusanyuse okukubuuza. Nkuyambe ntya leero?"
-        return f"Ntegedde bulungi: {user_text}. Ndi wano okukuyamba."
+
+        # Luganda Health & Medical inquiries
+        if any(w in text_lower for w in ("omutwe", "omubiri", "eddagala", "omusawo", "eddwaliro", "obulumi")):
+            return "Ntegedde obulumi bw'olina. Nsaba owummulemu katono, era osobole okulaba omusawo w'ebyobulamu mu ddwaliro eri okumpi naawe."
+
+        # Swahili Health & Medical inquiries
+        if any(w in text_lower for w in ("kichwa", "ugonjwa", "dawa", "daktari", "hospitali", "maumivu")):
+            return "Pole sana kwa hali unayopitia. Tafadhali pumzika vizuri na umuone daktari katika kituo cha afya kilicho karibu nawe."
+
+        # Luganda Greetings
+        if any(g in text_lower for g in ("oli otya", "wasuze", "ki kati", "osiibye", "gyendi")):
+            return "Gyendi bulungi nnyabo/ssebo, tusanyuse nnyo okukwaniriza mu LingualDub. Nkuyambe ntya leero?"
+
+        # Swahili Greetings
+        if any(g in text_lower for g in ("hujambo", "habari", "mambo", "shikamoo")):
+            return "Habari nzuri sana! Karibu katika mfumo wa kisasa wa sauti za Kiafrika. Naweza kukusaidia vipi leo?"
+
+        # Runyankore Greetings
+        if any(g in text_lower for g in ("agandi", "oriyo", "orire", "osiibire")):
+            return "Ndi gye munonga, twakwakiire n'omutima gumwe omuri LingualDub. Ninkuyamba nta eriizooba?"
+
+        # English Greetings & General Queries
+        if any(g in text_lower for g in ("hello", "hi", "hey", "good morning", "good afternoon")):
+            return "Hello and welcome to LingualDub Voice AI! I can converse with you in Luganda, Swahili, Runyankore, or English. How may I assist you today?"
+
+        if self.language == "swa":
+            return f"Nimekuelewa vizuri: '{user_text}'. Nipo hapa kukusaidia katika huduma yoyote ya sauti na lugha."
+        elif self.language == "nyn":
+            return f"Nnyetegyereize gye: '{user_text}'. Ndi aha kukuhwera omu by'amaraka n'endimi zaitu."
+        return f"Ntegedde bulungi kye ngambye: '{user_text}'. Ndi wano okukuyamba ku buli kimu ekikwata ku maloboozi n'ennimi zaffe."
+
 
     def user_speaks(self, text: str) -> None:
         """Record user speech and trigger barge-in if agent is speaking."""

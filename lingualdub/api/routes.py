@@ -8,6 +8,7 @@ API request handlers for OpenAI & ElevenLabs-compatible speech endpoints.
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 from lingualdub.components.tts.dummy import DummyTTSComponent
@@ -49,7 +50,8 @@ class SpeechAPIHandler:
             raise ValueError("Input text cannot be empty.")
 
         voice_id = payload.get("voice", "kigozi_lug")
-        model = payload.get("model", "dummy").lower()
+        api_key = payload.get("api_key") or os.environ.get("SUNBIRD_API_KEY")
+        model = payload.get("model", "sunbird" if api_key else "dummy").lower()
         speed = float(payload.get("speed", 1.0))
         language = payload.get("language", "lug")
 
@@ -64,7 +66,22 @@ class SpeechAPIHandler:
         consent_basis = voice_pack.metadata.consent_basis if voice_pack else "api_explicit_consent_granted"
 
         # Generate audio using the requested engine
-        if model == "dummy":
+        if model in ("sunbird", "sunbird_tts"):
+            from lingualdub.components.tts.sunbird import SunbirdTTSComponent
+
+            comp = SunbirdTTSComponent(language=language, voice_id=voice_id, api_key=api_key)
+            res = comp.run(
+                Result(
+                    segments=[Segment(start=0.0, end=2.0, text=text, language=language)],
+                    source_language=language,
+                    provenance={"consent_basis": consent_basis},
+                )
+            )
+            if res.artifacts:
+                from pathlib import Path
+                return Path(res.artifacts[0]).read_bytes(), "audio/wav"
+
+        elif model == "dummy":
             import tempfile
             from pathlib import Path
 
@@ -77,20 +94,6 @@ class SpeechAPIHandler:
                 tmp_path.unlink(missing_ok=True)
             return audio_bytes, "audio/wav"
 
-        elif model in ("sunbird", "sunbird_tts"):
-            from lingualdub.components.tts.sunbird import SunbirdTTSComponent
-
-            comp = SunbirdTTSComponent(language=language, voice_id=voice_id)
-            res = comp.run(
-                Result(
-                    segments=[Segment(start=0.0, end=2.0, text=text, language=language)],
-                    source_language=language,
-                    provenance={"consent_basis": consent_basis},
-                )
-            )
-            if res.artifacts:
-                from pathlib import Path
-                return Path(res.artifacts[0]).read_bytes(), "audio/wav"
 
         elif model in ("sherpa_mms", "sherpa_mms_tts"):
             from lingualdub.components.tts.sherpa_mms import SherpaMMSTTSComponent
@@ -231,22 +234,54 @@ class SpeechAPIHandler:
         if not text:
             raise ValueError("Text cannot be empty.")
 
+        api_key = payload.get("api_key") or os.environ.get("SUNBIRD_API_KEY")
+
+        # 1. Try real Sunbird AI Cloud Translation if API key is present
+        if api_key:
+            try:
+                from lingualdub.engines.sunbird.client import SunbirdClient
+                client = SunbirdClient(api_key=api_key)
+                sunbird_res = client.translate(text=text, source_language=src, target_language=tgt)
+                if isinstance(sunbird_res, dict) and "translated_text" in sunbird_res:
+                    return {
+                        "source_language": src,
+                        "target_language": tgt,
+                        "original_text": text,
+                        "translated_text": sunbird_res["translated_text"],
+                        "engine": "sunbird_cloud",
+                    }
+            except Exception as exc:
+                logger.debug("Sunbird translation fallback: %s", exc)
+
+        # 2. Try Local Quantized NLLB-200
         try:
             comp = QuantizedNLLBTranslationComponent(source_language=src, target_language=tgt)
             res = comp.run(
                 Result(segments=[Segment(start=0.0, end=1.0, text=text, language=src)], source_language=src)
             )
-            translated_text = res.segments[0].text if res.segments else text
+            if res.segments and res.segments[0].text:
+                return {
+                    "source_language": src,
+                    "target_language": tgt,
+                    "original_text": text,
+                    "translated_text": res.segments[0].text,
+                    "engine": "quantized_nllb",
+                }
         except Exception as exc:
-            logger.debug("Translation component fallback: %s", exc)
-            translated_text = f"[{tgt.upper()}] {text}"
+            logger.debug("NLLB translation fallback: %s", exc)
+
+        # 3. Authentic African Lexicon & Phrasebook Translation
+        from lingualdub.languages.lexicon import translate_with_lexicon
+        translated_text = translate_with_lexicon(text, source_language=src, target_language=tgt)
 
         return {
             "source_language": src,
             "target_language": tgt,
             "original_text": text,
             "translated_text": translated_text,
+            "engine": "african_lexicon",
         }
+
 
 
     def handle_studio_master(self, payload: dict[str, Any]) -> dict[str, Any]:

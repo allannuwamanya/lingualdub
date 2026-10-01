@@ -58,11 +58,16 @@ def test_agent_default_responder():
 
     # Greeting in Swahili
     resp_swa = agent._default_responder("Hujambo kaka?", [])
-    assert "Gyendi bulungi" in resp_swa
+    assert "Habari nzuri" in resp_swa or "Karibu" in resp_swa
+
+    # Medical inquiry in Luganda
+    resp_med = agent._default_responder("Nnumwa omutwe, njagala eddagala", [])
+    assert "Ntegedde obulumi" in resp_med or "omusawo" in resp_med
 
     # General query
-    resp_gen = agent._default_responder("Njagala omusawo", [])
-    assert "Ntegedde bulungi: Njagala omusawo" in resp_gen
+    resp_gen = agent._default_responder("Njagala kutegeera ebikwata ku mulimu", [])
+    assert "Ntegedde bulungi" in resp_gen
+
 
 
 def test_agent_respond_stream_full():
