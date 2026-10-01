@@ -1,6 +1,7 @@
-import { ArrowRight, BookOpen, Cpu, ShieldCheck, Sliders } from 'lucide-react';
+import { ArrowRight, BookOpen, Cpu, ShieldCheck, Sliders, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GithubIcon from '../components/GithubIcon';
+
 
 // Clean audio-waveform bars in modern royal blue
 function WaveformHero() {
@@ -49,12 +50,20 @@ export default function Home() {
           {/* CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 mt-10">
             <Link
+              to="/studio"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-xl transition-all"
+            >
+              <Sparkles className="w-4 h-4 text-slate-950" />
+              Launch African Voice Studio
+            </Link>
+            <Link
               to="/docs"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold text-slate-950 bg-white hover:bg-slate-100 shadow-xl transition-all"
             >
               <BookOpen className="w-4 h-4 text-slate-950" />
               Documentation
             </Link>
+
             <Link
               to="/overview"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold text-white bg-brand-600 hover:bg-brand-500 shadow transition-all"

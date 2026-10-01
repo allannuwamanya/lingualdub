@@ -58,6 +58,61 @@ def test_api_server_endpoints():
             assert len(audio_data) > 0
             assert audio_data[:4] == b"RIFF"
 
+        # 4. Test /v1/system/probe
+        req = urllib.request.Request(f"{base_url}/v1/system/probe")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode())
+            assert "accelerator" in data
+            assert "compute_class" in data
+
+        # 5. Test /v1/agent/converse
+        agent_payload = {"text": "Oli otya?", "voice_id": "kigozi_lug", "language": "lug"}
+        req = urllib.request.Request(
+            f"{base_url}/v1/agent/converse",
+            data=json.dumps(agent_payload).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode())
+            assert "reply_text" in data
+            assert "audio_base64" in data
+
+        # 6. Test /v1/translate
+        trans_payload = {"text": "Hello world", "source_language": "eng", "target_language": "lug"}
+        req = urllib.request.Request(
+            f"{base_url}/v1/translate",
+            data=json.dumps(trans_payload).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode())
+            assert "translated_text" in data
+
+        # 7. Test /v1/studio/master
+        master_payload = {"samples": [0.05, -0.05, 0.08, -0.08], "target_rms": 0.1}
+        req = urllib.request.Request(
+            f"{base_url}/v1/studio/master",
+            data=json.dumps(master_payload).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode())
+            assert "final_rms" in data
+
+        # 8. Test OPTIONS CORS
+        req = urllib.request.Request(f"{base_url}/v1/voices", method="OPTIONS")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 204
+            assert resp.headers.get("Access-Control-Allow-Origin") == "*"
+
     finally:
         server.shutdown()
         server.server_close()
+

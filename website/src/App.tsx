@@ -6,6 +6,7 @@ import Docs from './pages/Docs';
 import Abstractions from './pages/Abstractions';
 import Research from './pages/Research';
 import Architecture from './pages/Architecture';
+import Studio from './pages/Studio';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="/studio" element={<Studio />} />
           <Route path="/overview" element={<Overview />} />
           <Route path="/docs" element={<Docs />} />
           <Route path="/abstractions" element={<Abstractions />} />
@@ -23,3 +25,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

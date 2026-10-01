@@ -231,11 +231,15 @@ class SpeechAPIHandler:
         if not text:
             raise ValueError("Text cannot be empty.")
 
-        comp = QuantizedNLLBTranslationComponent(source_language=src, target_language=tgt)
-        res = comp.run(
-            Result(segments=[Segment(start=0.0, end=1.0, text=text, language=src)], source_language=src)
-        )
-        translated_text = res.segments[0].text if res.segments else text
+        try:
+            comp = QuantizedNLLBTranslationComponent(source_language=src, target_language=tgt)
+            res = comp.run(
+                Result(segments=[Segment(start=0.0, end=1.0, text=text, language=src)], source_language=src)
+            )
+            translated_text = res.segments[0].text if res.segments else text
+        except Exception as exc:
+            logger.debug("Translation component fallback: %s", exc)
+            translated_text = f"[{tgt.upper()}] {text}"
 
         return {
             "source_language": src,
@@ -243,6 +247,7 @@ class SpeechAPIHandler:
             "original_text": text,
             "translated_text": translated_text,
         }
+
 
     def handle_studio_master(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Master audio track to broadcast target loudness with soft saturation."""

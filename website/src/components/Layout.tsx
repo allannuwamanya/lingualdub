@@ -6,12 +6,14 @@ import TopLoadingBar from './TopLoadingBar';
 
 const NAV_ITEMS = [
   { label: 'Home', to: '/', end: true },
+  { label: '🎙️ Voice Studio', to: '/studio', end: false },
   { label: 'Overview', to: '/overview', end: false },
   { label: 'Docs', to: '/docs', end: false },
   { label: 'Abstractions', to: '/abstractions', end: false },
   { label: 'Research', to: '/research', end: false },
   { label: 'Architecture', to: '/architecture', end: false },
 ];
+
 
 export default function Layout() {
   const { pathname } = useLocation();
