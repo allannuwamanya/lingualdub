@@ -55,11 +55,22 @@ silently at runtime.
 
 ## Failure Handling
 
-Each stage can be configured with one of three failure modes:
+Failure handling is controlled by one of three modes:
 
 - **ABORT** — stop the pipeline and surface the error.
 - **SKIP** — omit the stage's contribution and mark `Result.status` as `PARTIAL`.
 - **DEGRADE** — invoke the component's `degrade()` path if defined and mark as `DEGRADED`.
+
+A pipeline sets its default with `on_stage_failure`, which applies to every
+stage that does not override it. A component overrides the default through its
+class-level `on_failure` attribute, so the resolution order at execution is:
+component `on_failure` first, pipeline `on_stage_failure` second.
+
+Note for YAML pipelines: `ConfigLoader` currently reads only `kind`, `key`,
+`version`, and `params` from each stage entry. A stage-level `on_failure` key
+written in a pipeline config is **not** read, so the pipeline-level
+`on_stage_failure` governs every stage. To give one stage a different mode,
+set it on the component class.
 
 `Result.status` and `Result.warnings` make the quality of every output explicit.
 

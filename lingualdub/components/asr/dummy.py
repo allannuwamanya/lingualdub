@@ -105,6 +105,7 @@ class DummyASRComponent(ASRComponent):
         result = Result(
             segments=segments,
             source_language=source_lang,
+            provenance=dict(input.provenance) if isinstance(input, Result) else {},
             metadata={"asr_model": f"{self.name}@{self.version}"},
         )
         return result

@@ -55,3 +55,6 @@ checkpoints/
 # Logs
 *.log
 logs/
+
+# Ad-hoc debugging scripts (one-off repros, not part of the suite)
+scratch/

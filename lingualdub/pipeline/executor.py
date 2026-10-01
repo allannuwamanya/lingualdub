@@ -498,9 +498,6 @@ class PipelineExecutor:
                 _metrics_backend.histogram(
                     "lingualdub_pipeline_duration_ms", _pipeline_dur, {"pipeline": pipeline_name}
                 )
-                # Pool utilization gauge (if pool exists, best-effort)
-                with contextlib.suppress(Exception):
-                    from lingualdub.resources.pool import ResourcePool  # noqa: F401
             struct_logger.info(
                 "pipeline.end",
                 extra={

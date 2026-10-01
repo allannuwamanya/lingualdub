@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **M8 — Generalisation Proof**: Complete Runyankole (`nyn`) speech-to-speech transfer proof with zero framework core modifications.
 - **M9 — Stable v0.1.0 Release**: Standardized Apache 2.0 licensing, PyPI publishing pipeline, updated documentation site, and complete contributor guide.
 - **Framework Hardening (FND/LCY/EXE/EXT/REL/PRO/PEV)**: Unified exception hierarchy (`RegistryError`/`ResourceNotFoundError` single source), strict `ResultStatus` monotonicity (`COMPLETE→PARTIAL→DEGRADED→FAILED`), lifecycle shutdown reverse-execution order, `Registry` versioned-cache, `docs/lifecycle.md`, observability and validation hardening, and performance caches.
+- **M10 — Cross-Lingual Voice Retention**: `SpeakerEmbeddingComponent` with a SpeechBrain ECAPA-TDNN backend (deterministic offline fallback), and `VoiceConditionedTTSComponent` wrapping Coqui XTTS-v2 for zero-shot cross-lingual voice cloning.
+- **M11 — Seamless Code-Switching Synthesis**: `NeuralLIDComponent` (transformer-based language ID) replacing the heuristic as the default LID stage, and `AudioBlendingComponent`, which cross-fades per-language synthesised audio to avoid clicks at language boundaries.
+- **M12 — Duration-Constrained Synthesis**: `AudioTimeStretchComponent` for duration-constrained TTS time-stretching, letting dialogue pacing hit target timings without resynthesis.
+- **M13 — Data Flywheel**: `DataFlywheelComponent` detects low-confidence and degraded segments, extracts audio snippets, and exports structured JSONL correction samples for active learning.
+- **`dub` CLI command**: single-command dubbing entry point with subtitle generation and muxing, plus manifest registration for all M10–M13 components.
 
 ### Fixed
 - Justify all `ValueError` raises with `# justified` per `FND-002` verification.

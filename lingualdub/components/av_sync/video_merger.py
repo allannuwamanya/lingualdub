@@ -17,6 +17,7 @@ Satisfies M7.3:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import logging
 import tempfile
@@ -28,6 +29,22 @@ from lingualdub.core.result import Result
 from lingualdub.core.segment import Segment
 
 logger = logging.getLogger(__name__)
+
+# Bound every ffmpeg invocation so a hung or malformed input cannot wedge the
+# calling thread indefinitely.
+FFMPEG_TIMEOUT = 120
+
+
+def _ffmpeg_concat_escape(path: str) -> str:
+    """
+    Escape a path for the ffmpeg concat demuxer ``file`` directive.
+
+    The demuxer parses each directive with single-quote semantics, so a path
+    containing an apostrophe would otherwise terminate the quoted value early
+    and let the remainder be parsed as additional directives. Backslashes are
+    doubled first, then embedded single quotes are closed, escaped and reopened.
+    """
+    return str(path).replace("\\", "\\\\").replace("'", "'\\''")
 
 
 def _write_dummy_mp4(filepath: Path, duration_sec: float = 2.0) -> None:
@@ -144,26 +161,30 @@ def _try_ffmpeg_merge(
             with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
                 for p in audio_paths:
                     # ffmpeg concat demuxer requires 'file path' syntax
-                    f.write(f"file '{Path(p).absolute()}'\n")
+                    f.write(f"file '{_ffmpeg_concat_escape(str(Path(p).absolute()))}'\n")
                 concat_list_path = f.name
 
-            temp_audio = Path(tempfile.gettempdir()) / f"merged_audio_{os.getpid()}.wav"
-            concat_cmd = [
-                "ffmpeg",
-                "-y",
-                "-f",
-                "concat",
-                "-safe",
-                "0",
-                "-i",
-                concat_list_path,
-                "-c",
-                "copy",
-                str(temp_audio),
-            ]
-            subprocess.run(concat_cmd, capture_output=True, check=True)
-            merged_audio = str(temp_audio)
-            os.remove(concat_list_path)
+            try:
+                temp_audio = Path(tempfile.gettempdir()) / f"merged_audio_{os.getpid()}.wav"
+                concat_cmd = [
+                    "ffmpeg",
+                    "-y",
+                    "-f",
+                    "concat",
+                    "-safe",
+                    "0",
+                    "-i",
+                    concat_list_path,
+                    "-c",
+                    "copy",
+                    str(temp_audio),
+                ]
+                subprocess.run(concat_cmd, capture_output=True, check=True, timeout=FFMPEG_TIMEOUT)
+                merged_audio = str(temp_audio)
+            finally:
+                # Remove the concat manifest even when ffmpeg fails.
+                with contextlib.suppress(OSError):
+                    os.remove(concat_list_path)
 
         cmd = [
             "ffmpeg",
@@ -197,7 +218,7 @@ def _try_ffmpeg_merge(
             ]
         )
 
-        result = subprocess.run(cmd, capture_output=True, timeout=30)
+        result = subprocess.run(cmd, capture_output=True, timeout=FFMPEG_TIMEOUT)
 
         # If merge with subtitles failed, try fallback without subtitles
         if result.returncode != 0 and has_subs:
@@ -216,11 +237,7 @@ def _try_ffmpeg_merge(
                 "-shortest",
                 str(output_path),
             ]
-            result = subprocess.run(fallback_cmd, capture_output=True, timeout=30)
-
-        # Cleanup temporary audio if created
-        if temp_audio and temp_audio.exists():
-            os.remove(temp_audio)
+            result = subprocess.run(fallback_cmd, capture_output=True, timeout=FFMPEG_TIMEOUT)
 
         if result.returncode == 0 and output_path.exists():
             logger.info("Merged video via ffmpeg subprocess: %s", output_path)
@@ -229,6 +246,11 @@ def _try_ffmpeg_merge(
             logger.debug("ffmpeg merge failed: %s", result.stderr.decode("utf-8", "ignore"))
     except Exception as exc:
         logger.debug("ffmpeg subprocess merge failed (%s)", exc)
+    finally:
+        # Cleanup temporary audio if created, on both success and failure paths.
+        if temp_audio:
+            with contextlib.suppress(OSError):
+                temp_audio.unlink(missing_ok=True)
 
     return False
 

@@ -106,11 +106,14 @@ def compute_bleu(hypothesis: str, reference: str, max_n: int = 4) -> float:
     """Compute sentence-level BLEU score (0.0 to 100.0)."""
     try:
         import sacrebleu
-
+    except ImportError:
+        # Only a genuinely absent dependency justifies the pure-Python path —
+        # a sacrebleu *failure* must surface rather than silently changing how
+        # the score is computed.
+        pass
+    else:
         score = sacrebleu.sentence_bleu(hypothesis.strip(), [reference.strip()]).score
         return round(float(score), 2)
-    except Exception:
-        pass
 
     # Pure-Python BLEU implementation
     hyp_tokens = hypothesis.strip().lower().split()

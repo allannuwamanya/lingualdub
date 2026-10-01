@@ -6,4 +6,4 @@
 from lingualdub.components.av_sync.dialogue_timing import DialogueTimingComponent
 from lingualdub.components.av_sync.video_merger import VideoMergerComponent
 
-__all__ = ["DialogueTimingComponent", "VideoMergerComponent"]
+__all__: list[str] = ["DialogueTimingComponent", "VideoMergerComponent"]

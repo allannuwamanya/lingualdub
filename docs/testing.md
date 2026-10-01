@@ -195,7 +195,11 @@ Assertion helper with detailed diff on mismatch.
 
 ## Coverage
 
-`lingualdub/testing/` itself has 100% branch coverage targeted — builders/fakes/matchers/harness/clock are each unit-tested in `tests/testing/`.
+`lingualdub/testing/` is unit-tested in `tests/testing/` (matchers, clock, fakes) alongside
+the existing `tests/di/`, `tests/lifecycle/` and `tests/core/` suites. Current coverage of
+the package is 93 %; `clock.py` and `fakes.py` are at 100 %. The helpers are asserted on
+their failure paths, since a matcher that silently passes would make a downstream suite
+report green while checking nothing.
 
 ## See Also
 

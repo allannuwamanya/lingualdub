@@ -55,6 +55,9 @@ class MMSTTSComponent(TTSComponent):
         device: str | None = None,
         version: str = "1.0.0",
     ) -> None:
+        # Assign version before super().__init__() so contract validation runs
+        # against the caller's value rather than the class-level default.
+        self.version = version
         super().__init__()
         self.language = language
         # Resolve checkpoint: use explicit path, then language map, then fallback.
@@ -73,7 +76,6 @@ class MMSTTSComponent(TTSComponent):
             Path(output_dir) if output_dir else Path(tempfile.gettempdir()) / "lingualdub_mms_tts"
         )
         self.device = device
-        self.version = version
         self._model: Any = None
         self._tokenizer: Any = None
 

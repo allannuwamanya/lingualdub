@@ -7,6 +7,7 @@ Hugging Face translation adapter for NLLB, M2M100, or Sunbird models.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -89,10 +90,14 @@ class HuggingFaceTranslationComponent(TranslationComponent):
         self._load_model()
         assert self._model is not None, "Model failed to load"
         assert self._tokenizer is not None, "Tokenizer failed to load"
+        # torch is guaranteed after a real _load_model(), but a caller (or a mock
+        # injection in tests) may supply _model/_tokenizer directly, so stay
+        # import-safe and fall back to a no-op grad context.
         try:
             import torch
         except ImportError:
             torch = None
+        grad_ctx = torch.no_grad() if torch is not None else contextlib.nullcontext()
 
         src_lang_code = NLLB_CODE_MAP.get(self.source_language, self.source_language)
         tgt_lang_code = NLLB_CODE_MAP.get(self.target_language, self.target_language)
@@ -114,17 +119,7 @@ class HuggingFaceTranslationComponent(TranslationComponent):
         ):
             forced_bos_token_id = self._tokenizer.lang_code_to_id[tgt_lang_code]
 
-        if torch is not None:
-            with torch.no_grad():
-                if forced_bos_token_id is not None:
-                    generated = self._model.generate(
-                        **inputs,
-                        forced_bos_token_id=forced_bos_token_id,
-                        max_length=self.max_length,
-                    )
-                else:
-                    generated = self._model.generate(**inputs, max_length=self.max_length)
-        else:
+        with grad_ctx:
             if forced_bos_token_id is not None:
                 generated = self._model.generate(
                     **inputs,

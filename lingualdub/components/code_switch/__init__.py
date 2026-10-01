@@ -16,7 +16,7 @@ from lingualdub.components.code_switch.dummy import DummyCodeSwitchComponent
 from lingualdub.components.code_switch.heuristic import HeuristicLIDComponent
 from lingualdub.components.code_switch.neural_lid import NeuralLIDComponent
 
-__all__ = [
+__all__: list[str] = [
     "AudioBlendingComponent",
     "CodeSwitchComponent",
     "DummyCodeSwitchComponent",

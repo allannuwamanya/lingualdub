@@ -43,14 +43,12 @@ class WhisperASRComponent(ASRComponent):
         device: str | None = None,
         language: str | None = "lug",
         task: str = "transcribe",
-        return_timestamps: bool | str = "word",
         version: str = "1.0.0",
     ) -> None:
         self.model_name_or_path = model_name_or_path
         self.device = device
         self.language = language
         self.asr_task = task
-        self.return_timestamps = return_timestamps
         self.version = version
         self._pipeline: Any = None
 
@@ -71,12 +69,14 @@ class WhisperASRComponent(ASRComponent):
                 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
             logger.info("Loading ASR model %r on device %r", self.model_name_or_path, device)
+            # NOTE: return_timestamps="word" causes TypeError with newer
+            # transformers/Python 3.13. Chunk-level timestamps (True) are stable
+            # across all supported versions, so the constructor's
+            # return_timestamps argument cannot be honoured and is ignored.
             self._pipeline = pipeline(
                 "automatic-speech-recognition",
                 model=self.model_name_or_path,
                 device=device,
-                # NOTE: return_timestamps="word" causes TypeError with newer transformers/Python 3.13.
-                # Using True (chunk-level) which is stable across all versions.
                 return_timestamps=True,
             )
 

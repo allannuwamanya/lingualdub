@@ -24,6 +24,12 @@ from lingualdub.core.component import ComponentTask, FailureMode
 from lingualdub.core.resource import Resource
 from lingualdub.core.result import Result
 from lingualdub.core.segment import Segment
+from lingualdub.utils.consent import ensure_consent
+from lingualdub.utils.provenance import propagated_provenance as _propagated_provenance
+
+# Uploading voice audio to a third-party API is a network egress of voice data.
+# Bound it so a hung endpoint cannot block the calling thread indefinitely.
+API_TIMEOUT_SECONDS = 60
 
 logger = logging.getLogger(__name__)
 
@@ -117,12 +123,15 @@ class SunbirdASRComponent(ASRComponent):
                 )
         return self._pipeline
 
-    def _run_api(self, audio_path: str) -> Result:
+    def _run_api(self, audio_path: str, input: Result | Resource) -> Result:
         """Execute transcription via Sunbird AI cloud API."""
         if not self.api_key:
             raise ValueError(  # justified: component input validation — not a framework config error
                 "Sunbird API transcription requires an API key. Set SUNBIRD_API_KEY environment variable."
             )
+
+        # Voice audio leaves the machine here — require a recorded consent basis first.
+        ensure_consent(input, self.name)
 
         api_url = "https://api.sunbird.ai/tasks/stt"
         headers = {
@@ -136,7 +145,7 @@ class SunbirdASRComponent(ASRComponent):
         # Pass file handle directly to allow urllib to stream the data
         with open(audio_path, "rb") as f:
             req = urllib.request.Request(api_url, data=f, headers=headers, method="POST")
-            with urllib.request.urlopen(req) as resp:
+            with urllib.request.urlopen(req, timeout=API_TIMEOUT_SECONDS) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
 
         text = data.get("text", "").strip()
@@ -152,6 +161,7 @@ class SunbirdASRComponent(ASRComponent):
         return Result(
             segments=segments,
             source_language=self.language,
+            provenance=_propagated_provenance(input),
             metadata={"provider": "sunbird_api", "model": self.model_name_or_path},
         )
 
@@ -175,7 +185,7 @@ class SunbirdASRComponent(ASRComponent):
             )
 
         if self.use_api and self.api_key:
-            return self._run_api(audio_path)
+            return self._run_api(audio_path, input)
 
         pipe = self._get_hf_pipeline()
         # Do NOT pass language= here for Sunbird fine-tuned models — they have
@@ -222,6 +232,7 @@ class SunbirdASRComponent(ASRComponent):
         return Result(
             segments=segments,
             source_language=source_lang,
+            provenance=_propagated_provenance(input),
             metadata={
                 "provider": "sunbird_hf",
                 "model": self.model_name_or_path,

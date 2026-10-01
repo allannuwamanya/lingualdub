@@ -75,6 +75,7 @@ class AVSyncEvaluator(EvaluatorComponent):
         self._syncnet_resource: Resource | None = None
         self._syncnet_resource_path: str | None = None
         self._model: Any = None
+        self._syncnet_probed: bool = False
 
     def _load_syncnet_resource(self) -> None:
         """Acquire SyncNet model via Registry/ResourceManager (offline fallback if absent)."""
@@ -88,36 +89,31 @@ class AVSyncEvaluator(EvaluatorComponent):
             self._syncnet_resource_path = path
 
     def _load_syncnet_model(self) -> Any:
-        """Attempt to load SyncNet model if dependencies available."""
-        if self._model is not None:
+        """
+        Attempt to load a SyncNet model.
+
+        There is no implemented SyncNet binding in this framework, so this
+        always returns ``None`` and scoring stays on the deterministic
+        timing-offset path. The import probe is kept (cheap, and memoised via
+        ``self._model``) so a future real binding has a single place to land.
+        """
+        if self._model is not None or self._syncnet_probed:
             return self._model
+        self._syncnet_probed = True
         try:
+            import syncnet as _syncnet  # type: ignore
             import torch  # noqa: F401
 
-            # Try to import SyncNet — package name varies (syncnet, av_sync)
-            # Offline will raise and fallback to deterministic.
-            try:
-                from syncnet import SyncNet  # type: ignore
-            except ImportError:
-                try:
-                    import syncnet as _syncnet  # type: ignore
-
-                    SyncNet = getattr(_syncnet, "SyncNet", None)
-                    if SyncNet is None:
-                        raise ImportError("SyncNet not found in syncnet package")
-                except ImportError as exc:
-                    raise ImportError(f"SyncNet not available: {exc}") from exc
-
+            if getattr(_syncnet, "SyncNet", None) is None:
+                raise ImportError("SyncNet not found in syncnet package")
             model_src = self._syncnet_resource_path or "syncnet"
-            logger.info("Loading SyncNet model %r", model_src)
-            # Placeholder: actual SyncNet loading would use model_src
-            # self._model = SyncNet.from_pretrained(model_src)
-            self._model = None  # No real model in offline; keep deterministic
-            return self._model
+            logger.info("SyncNet binding available; loading %r", model_src)
         except Exception as exc:
             logger.debug("SyncNet model not available (%s), using deterministic fallback.", exc)
-            self._model = None
-            return None
+
+        # No real SyncNet inference is implemented yet — do not claim otherwise.
+        self._model = None
+        return None
 
     def run(self, input: Result | Resource) -> Result:
         """Evaluate a single Result's AV offsets vs its own target_duration.

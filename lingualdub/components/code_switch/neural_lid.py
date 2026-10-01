@@ -51,9 +51,10 @@ class NeuralLIDComponent(CodeSwitchComponent):
         self.version = version
         self.device = device
         self._pipeline: Any = None
+        self._load_failed: bool = False
 
     def _load_model(self) -> None:
-        if self._pipeline is not None:
+        if self._pipeline is not None or self._load_failed:
             return
         try:
             import torch
@@ -64,7 +65,7 @@ class NeuralLIDComponent(CodeSwitchComponent):
             self._pipeline = pipeline("text-classification", model=self.model_name, device=device)
         except Exception as exc:
             logger.warning("Failed to load Neural LID model: %s", exc)
-            self._pipeline = False
+            self._load_failed = True
 
     def _map_lang_code(self, model_label: str) -> str:
         """Map standard 2-letter ISO to our framework 3-letter codes."""
@@ -80,7 +81,7 @@ class NeuralLIDComponent(CodeSwitchComponent):
 
     def classify_text(self, text: str) -> tuple[str, float]:
         self._load_model()
-        if not self._pipeline or self._pipeline is False:
+        if self._pipeline is None:
             return self.default_language, 0.5
 
         try:
@@ -89,9 +90,21 @@ class NeuralLIDComponent(CodeSwitchComponent):
                 label = res[0]["label"]
                 score = res[0]["score"]
                 return self._map_lang_code(label), score
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Neural LID inference failed: %s", exc)
         return self.default_language, 0.5
+
+    def _apply_threshold(
+        self, dominant_lang: str, confidence: float, fallback_lang: str
+    ) -> tuple[str, bool]:
+        """
+        Keep the upstream language when the model's confidence is below threshold.
+
+        Returns (language_to_use, below_threshold).
+        """
+        if confidence < self.confidence_threshold:
+            return (fallback_lang or self.default_language), True
+        return dominant_lang, False
 
     def _split_mixed_segment(self, seg: Segment, default_lang: str) -> list[Segment]:
         """Split a segment into language-pure sub-segments if code-switching is detected."""
@@ -99,11 +112,17 @@ class NeuralLIDComponent(CodeSwitchComponent):
         tokens = text.split()
         if len(tokens) <= 1:
             dominant_lang, conf = self.classify_text(text)
+            lang, below = self._apply_threshold(dominant_lang, conf, seg.language or default_lang)
             return [
                 seg.replace(
-                    language=dominant_lang,
+                    language=lang,
                     confidence=seg.confidence or conf,
-                    metadata={**seg.metadata, "lid_confidence": conf, "neural_lid_used": True},
+                    metadata={
+                        **seg.metadata,
+                        "lid_confidence": conf,
+                        "lid_below_threshold": below,
+                        "neural_lid_used": True,
+                    },
                 )
             ]
 
@@ -118,11 +137,17 @@ class NeuralLIDComponent(CodeSwitchComponent):
 
         if len(spans) <= 1:
             dominant_lang, conf = self.classify_text(text)
+            lang, below = self._apply_threshold(dominant_lang, conf, seg.language or default_lang)
             return [
                 seg.replace(
-                    language=dominant_lang,
+                    language=lang,
                     confidence=seg.confidence or conf,
-                    metadata={**seg.metadata, "lid_confidence": conf, "neural_lid_used": True},
+                    metadata={
+                        **seg.metadata,
+                        "lid_confidence": conf,
+                        "lid_below_threshold": below,
+                        "neural_lid_used": True,
+                    },
                 )
             ]
 
@@ -180,17 +205,23 @@ class NeuralLIDComponent(CodeSwitchComponent):
                 processed_segments.extend(split_segs)
             else:
                 dominant_lang, conf = self.classify_text(seg.text or "")
+                lang, below = self._apply_threshold(
+                    dominant_lang,
+                    conf,
+                    seg.language or input.source_language or self.default_language,
+                )
                 updated_seg = Segment(
                     start=seg.start,
                     end=seg.end,
                     text=seg.text,
-                    language=dominant_lang,
+                    language=lang,
                     source_language=seg.source_language or input.source_language,
                     speaker=seg.speaker,
                     confidence=seg.confidence or conf,
                     metadata={
                         **seg.metadata,
                         "lid_confidence": conf,
+                        "lid_below_threshold": below,
                         "neural_lid_used": True,
                     },
                 )

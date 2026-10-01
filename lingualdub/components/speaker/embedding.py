@@ -97,11 +97,12 @@ class SpeakerEmbeddingComponent(SpeakerComponent):
         registry: object | None = None,
         version: str = "1.0.0",
     ) -> None:
-        super().__init__()
+        # Assign version before super().__init__() so contract validation runs
+        # against the caller's value rather than the class-level default.
         self.version = version
+        super().__init__()
         self.model_name_or_path = model_name_or_path or "speechbrain/spkrec-ecapa-voxceleb"
         self.embedding_dim = embedding_dim
-        self.version = version
         self._resource_manager = resource_manager
         self._registry = registry
         self._speaker_resource: Resource | None = None

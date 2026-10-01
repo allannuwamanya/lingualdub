@@ -69,10 +69,16 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          pytest benchmarks/ --benchmark-json benchmarks/baselines/latest.json -v || echo "Benchmarks require pytest-benchmark, ensure installed"
+          pytest benchmarks/ \
+            -o python_files="bench_*.py" \
+            --benchmark-json benchmarks/baselines/latest.json \
+            -v
           ls -lh benchmarks/baselines/
 
       - name: Compare with baseline (fail on 10x regression)
         run: |
-          python -c "import json, pathlib; b=json.loads(pathlib.Path('benchmarks/baselines/baseline.json').read_text()); print(f'Baseline benchmarks: {len(b[\"benchmarks\"])} categories'); print('Benchmark baseline check passed')"
+          python benchmarks/compare_baseline.py \
+            --baseline benchmarks/baselines/baseline.json \
+            --current benchmarks/baselines/latest.json \
+            --max-regression-factor 10
 

@@ -159,6 +159,11 @@ class HeuristicLIDComponent(CodeSwitchComponent):
                     )
             else:
                 dominant_lang, conf = self.classify_text(seg.text)
+                # Below the confidence threshold the label is not trustworthy, so
+                # keep the upstream language rather than assert a weak guess.
+                below_threshold = conf < self.confidence_threshold
+                if below_threshold:
+                    dominant_lang = seg.language or input.source_language or self.default_language
                 updated_seg = Segment(
                     start=seg.start,
                     end=seg.end,
@@ -170,6 +175,7 @@ class HeuristicLIDComponent(CodeSwitchComponent):
                     metadata={
                         **seg.metadata,
                         "lid_confidence": conf,
+                        "lid_below_threshold": below_threshold,
                         "token_languages": token_langs,
                         "is_code_switched": has_mixed_languages,
                     },

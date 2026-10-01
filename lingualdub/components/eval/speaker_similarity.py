@@ -68,13 +68,14 @@ class SpeakerSimilarityEvaluator(EvaluatorComponent):
         self.version = version
 
     def run(self, input: Result | Resource) -> Result:
-        # Default run: if input is a Result with embedding, return it with metrics placeholder
-        if isinstance(input, Result):
-            if "speaker_embedding" in input.metadata:
-                # Single-result evaluation not meaningful; return as-is
-                return input
-            return input
-        return Result()
+        """
+        Pass the input through unchanged.
+
+        Speaker similarity is a *comparative* metric — a single utterance has no
+        reference to be similar to. Real scoring happens in :meth:`evaluate_pair`,
+        so as a pipeline stage this component is a declared no-op.
+        """
+        return input if isinstance(input, Result) else Result()
 
     def evaluate_pair(self, hypothesis: Result, reference: Result | Resource) -> Result:
         """

@@ -307,7 +307,10 @@ def cmd_experiment_run(args: argparse.Namespace) -> int:
     elif input_video_path:
         # No audio, but video + possibly sample_text — handle sample_text with video provenance
         if args.sample_text:
-            prov = {"source_video": str(input_video_path)}
+            prov = {
+                "consent_basis": "user_provided",
+                "source_video": str(input_video_path),
+            }
             tmp = ld.Result(
                 segments=[
                     ld.Segment(
@@ -345,7 +348,7 @@ def cmd_experiment_run(args: argparse.Namespace) -> int:
                 )
             ],
             source_language=pipeline.source_language,
-            provenance={},
+            provenance={"consent_basis": "user_provided"},
         )
     else:
         # Default placeholder — include synthetic consent for offline voice pipeline testing (flagged as synthetic)

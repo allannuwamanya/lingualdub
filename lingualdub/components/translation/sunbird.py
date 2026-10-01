@@ -10,6 +10,7 @@ Lugbara (lgg), and English (eng).
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -178,20 +179,16 @@ class SunbirdTranslationComponent(TranslationComponent):
                 if tid and tid != self._tokenizer.unk_token_id:
                     forced_bos = tid
 
+            # torch is guaranteed after a real _load_model(), but a caller (or a mock
+            # injection in tests) may supply _model/_tokenizer directly, so stay
+            # import-safe and fall back to a no-op grad context.
             try:
                 import torch
             except ImportError:
                 torch = None
+            grad_ctx = torch.no_grad() if torch is not None else contextlib.nullcontext()
 
-            if torch is not None:
-                with torch.no_grad():
-                    if forced_bos is not None:
-                        generated = self._model.generate(
-                            **inputs, forced_bos_token_id=forced_bos, max_length=512
-                        )
-                    else:
-                        generated = self._model.generate(**inputs, max_length=512)
-            else:
+            with grad_ctx:
                 if forced_bos is not None:
                     generated = self._model.generate(
                         **inputs, forced_bos_token_id=forced_bos, max_length=512

@@ -80,6 +80,26 @@ Configs: `configs/runyankole_mock_pipeline.yaml` (offline `runyankole_asr→dumm
 
 Audit: `docs/research/runyankole_audit.md` (speech ~40h SALT, text Hansard/JW.org/MoH, licenses CC-BY-4.0/CC-BY-NC 4.0, transfer analysis).
 
+## Milestones 10–13 — Post-v0.1.0 Components
+
+These shipped after `0.1.0`; the model choices below are the ones the
+components actually default to in code.
+
+| Milestone | Component | Model | Licence | Notes |
+|---|---|---|---|---|
+| M10 — Voice retention | `SpeakerEmbeddingComponent` (`speaker_embedding`) | `speechbrain/spkrec-ecapa-voxceleb` | Apache-2.0 | 192-d ECAPA-TDNN; falls back to a deterministic hash encoder when SpeechBrain or the weights are unavailable |
+| M10 — Voice transfer | `VoiceConditionedTTSComponent` (`voice_conditioned_tts`) | `coqui/XTTS-v2` | CPML | Same model as M6; see the CPML obligations above |
+| M11 — Code-switch LID | `NeuralLIDComponent` (`neural_lid`) | `papluca/xlm-roberta-base-language-detection` | Apache-2.0 | Transformer LID; degrades to the heuristic dominant language when the model cannot load |
+| M11 — Blending | `AudioBlendingComponent` (`audio_blender`) | None — deterministic WSOLA cross-fade | Apache-2.0 | Dependency-free audio stitching; no model weights |
+| M12 — Time stretching | `AudioTimeStretchComponent` (`audio_time_stretcher`) | None — WSOLA time-scale modification | Apache-2.0 | Bounded stretching to hit dialogue timing targets; no resynthesis |
+| M12 — Forced alignment | `NeuralForcedAlignmentComponent` (`neural_forced_aligner`) | `facebook/wav2vec2-base-960h` | Apache-2.0 | CTC greedy alignment (`ctc_greedy`); falls back to proportional distribution, recorded as `alignment_method` in segment metadata |
+| M13 — Data flywheel | `DataFlywheelComponent` (`data_flywheel`) | None — triage and export only | Apache-2.0 | Selects low-confidence/degraded segments and exports JSONL correction samples |
+
+Every component above has a deterministic offline path, so the full M10–M13
+pipeline is runnable and testable without model weights or a GPU. Optional
+weights are acquired through `ResourceManager` where the backend requires them;
+the pure-signal components (blending, time-stretching) need no weights at all.
+
 All model weights are acquired via `lingualdub.utils.ResourceManager` (SHA256 verified, `~/.cache/lingualdub`, `LINGUALDUB_CACHE_DIR` override) and versioned in `Result.provenance`.
 
-*Last updated: 2026-09-10 — versioned with LingualDub `0.1.0`.*
+*Last updated: 2026-10-01 — adds the M10–M13 model inventory.*

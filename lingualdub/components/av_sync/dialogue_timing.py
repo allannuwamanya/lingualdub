@@ -90,23 +90,10 @@ def _detect_cues_from_video(
     except Exception as exc:
         logger.debug("OpenCV cue detection unavailable (%s), trying ffmpeg", exc)
 
-    # Attempt ffmpeg probe for scene detection metadata
-    try:
-        import subprocess
-
-        # Use ffprobe to get duration and try to estimate cues from keyframes
-        result = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", str(video_path)],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if result.returncode == 0:
-            # No reliable cue without scene filter; fallback to empty
-            pass
-    except Exception as exc:
-        logger.debug("ffprobe cue detection unavailable (%s)", exc)
-
+    # PySceneDetect and OpenCV are the only reliable scene-cut sources here;
+    # ffprobe exposes no cut information without a decode pass, so it is not
+    # worth shelling out for. Returning no cues keeps the caller on its
+    # unsnapped (pass-through) timing path.
     return cues
 
 

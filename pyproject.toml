@@ -116,7 +116,10 @@ where = ["."]
 include = ["lingualdub*"]
 
 [tool.setuptools.package-data]
-lingualdub = ["py.typed", "lingualdub.manifest.json", "registry/manifest_schema.json", "configs/*.yaml"]
+# Note: pipeline configs live at the repo root in `configs/` and are referenced by
+# relative path from the README, docs and notebooks — they are examples, not
+# runtime package data, so they are intentionally not bundled into the wheel.
+lingualdub = ["py.typed", "lingualdub.manifest.json", "registry/manifest_schema.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

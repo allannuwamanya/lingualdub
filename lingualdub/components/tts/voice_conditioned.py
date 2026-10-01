@@ -152,8 +152,10 @@ class VoiceConditionedTTSComponent(TTSComponent):
         version: str = "1.0.0",
         require_duration_target: bool = False,
     ) -> None:
-        super().__init__()
+        # Assign version before super().__init__() so contract validation runs
+        # against the caller's value rather than the class-level default.
         self.version = version
+        super().__init__()
         self.model_name_or_path = model_name_or_path
         self.speaker_reference = speaker_reference
         self.speaker_embedding = speaker_embedding
@@ -163,7 +165,6 @@ class VoiceConditionedTTSComponent(TTSComponent):
         )
         self.sample_rate = sample_rate
         self.device = device
-        self.version = version
         self._resource_manager = resource_manager
         self._registry = registry
         self._voice_resource: Resource | None = None

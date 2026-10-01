@@ -12,8 +12,7 @@ Thank you for your interest in contributing to **LingualDub**! We welcome contri
 - [Contribution Workflows](#contribution-workflows)
   - [1. Adding a New Language](#1-adding-a-new-language)
   - [2. Creating a New Component Adapter](#2-creating-a-new-component-adapter)
-  - [3. Registering a Dataset or Eval Resource](#3-registering-a-dataset-or-eval-resource)
-  - [4. Creating a New Pipeline](#4-creating-a-new-pipeline)
+  - [3. Declaring Extension Manifests](#3-declaring-extension-manifests)
 - [Code Standards & Quality](#code-standards--quality)
 - [Testing & CI](#testing--ci)
 - [Submitting a Pull Request](#submitting-a-pull-request)
@@ -166,7 +165,7 @@ All pull requests must pass our automated CI suite:
 pytest --cov=lingualdub --cov-report=term-missing
 ```
 
-- Ensure test coverage remains `>= 80%` across core modules.
+- Ensure test coverage remains at or above the 70 % gate enforced by CI (`--cov-fail-under=70`).
 - Add mock components to test execution paths without requiring heavy GPU/ML dependencies.
 
 ---

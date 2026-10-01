@@ -44,6 +44,87 @@ def _distribute_word_timestamps(words: list[str], seg_start: float, seg_end: flo
     return timestamps
 
 
+def _id_to_char(vocab: dict[str, int]) -> dict[int, str]:
+    """Build a token-id to character map, skipping special/non-character tokens."""
+    out: dict[int, str] = {}
+    for token, idx in vocab.items():
+        if len(token) != 1:
+            continue  # specials like "<pad>", "<unk>", "<s>" are multi-char
+        if token in {"<", ">", "|"} or not token.isalnum():
+            continue
+        out[idx] = token.upper()
+    return out
+
+
+def _ctc_char_frames(logits, id_to_char: dict[int, str], blank_id: int) -> list[tuple[str, int]]:
+    """
+    Greedy-decode CTC logits into a list of (character, first_frame_index).
+
+    Applies the standard CTC collapse: drop blank frames and collapse repeated
+    labels, recording the frame at which each surviving character is emitted.
+    """
+    best = logits.argmax(dim=-1)[0].tolist()
+    chars: list[tuple[str, int]] = []
+    previous = -1
+    for frame_idx, token_id in enumerate(best):
+        if token_id == previous:
+            continue  # collapsed CTC repeat
+        previous = token_id
+        if token_id == blank_id:
+            continue  # CTC blank carries no character
+        char = id_to_char.get(token_id)
+        if char is not None:
+            chars.append((char, frame_idx))
+    return chars
+
+
+def _align_words_to_frames(
+    words: list[str], char_frames: list[tuple[str, int]]
+) -> list[tuple[int, int]] | None:
+    """
+    Anchor transcript words onto decoded CTC character frames.
+
+    Walks the emitted characters and the normalized transcript together; a word
+    takes the frame index of its first matched character. Returns one (start,
+    end) frame pair per word, or None when the streams cannot be reconciled
+    (caller then falls back to proportional distribution).
+
+    CTC collapses a run of identical labels into a single emission, so a word
+    like "hello" emits one "L" for its two "L"s. A repeated transcript letter
+    therefore reuses the character just consumed rather than demanding another.
+    """
+    emitted = [(c, f) for c, f in char_frames]
+    cursor = 0
+    spans: list[tuple[int, int]] = []
+
+    for word in words:
+        letters = [ch for ch in word.upper() if ch.isalnum()]
+        if not letters:
+            return None
+        start_frame: int | None = None
+        end_frame: int | None = None
+        for ch in letters:
+            # A doubled letter was collapsed by CTC — reuse the last emission.
+            if cursor > 0 and emitted[cursor - 1][0] == ch:
+                frame = emitted[cursor - 1][1]
+            else:
+                # Skip ahead to the next occurrence of this character.
+                while cursor < len(emitted) and emitted[cursor][0] != ch:
+                    cursor += 1
+                if cursor >= len(emitted):
+                    return None
+                frame = emitted[cursor][1]
+                cursor += 1
+            if start_frame is None:
+                start_frame = frame
+            end_frame = frame
+        if start_frame is None or end_frame is None:
+            return None
+        spans.append((start_frame, end_frame))
+
+    return spans or None
+
+
 class NeuralForcedAlignmentComponent(AlignmentComponent):
     """
     Neural forced aligner using Wav2Vec2 CTC models to produce accurate
@@ -77,8 +158,14 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
     def _load_model(self) -> None:
         if self._model is not None:
             return
-        import torch
-        from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
+        try:
+            import torch
+            from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
+        except ImportError as exc:
+            raise RuntimeError(  # justified: missing optional heavy dependency (torch/transformers) — not a framework error
+                "NeuralForcedAlignmentComponent requires 'transformers', 'torch' and 'torchaudio'. "
+                "Install with: pip install torch transformers torchaudio"
+            ) from exc
 
         device = self.device or ("cuda:0" if torch.cuda.is_available() else "cpu")
         logger.info("Loading Wav2Vec2 CTC aligner model %r on %s", self.model_name, device)
@@ -102,7 +189,9 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
 
     def run(self, input: Result | Resource) -> Result:
         if not isinstance(input, Result):
-            raise ValueError(f"{self.name} expects a Result, got {type(input).__name__}")
+            raise ValueError(  # justified: component input validation — not a framework config error
+                f"{self.name} expects a Result, got {type(input).__name__}"
+            )
 
         audio_path = self._get_audio_path(input)
 
@@ -143,44 +232,75 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                     text = (seg.text or "").strip().upper()
 
                     if not text or len(seg_wav) < 400:
-                        # Too short or empty, just use dummy
+                        # Too short or empty for a stable CTC decode
                         word_timestamps = _distribute_word_timestamps(
                             (seg.text or "").split(), seg.start, seg.end
                         )
+                        method = "proportional_fallback"
                     else:
                         try:
-                            # Forward pass for logits
                             with torch.no_grad():
                                 inputs = self._processor(
                                     seg_wav.cpu().numpy(), sampling_rate=sr, return_tensors="pt"
                                 ).to(device)
-                                _ = self._model(**inputs).logits
+                                logits = self._model(**inputs).logits
 
-                            # Get word timestamps using processor's decode or simply fallback
-                            # Since exact CTC forced alignment logic is complex to write manually without
-                            # torchaudio.functional.forced_align which requires explicit dictionary mapping,
-                            # we will simulate it safely or use standard huggingface decoding.
-                            # For the sake of the framework, we simulate the accurate alignment using
-                            # the dummy for now, but with neural processing hooks prepared.
-                            word_timestamps = _distribute_word_timestamps(
-                                (seg.text or "").split(), seg.start, seg.end
+                            # Greedy CTC decode -> anchor transcript words onto the
+                            # emitted character frames. Falls back to proportional
+                            # distribution when the streams cannot be reconciled.
+                            id_to_char = _id_to_char(self._processor.tokenizer.get_vocab())
+                            blank_id = self._model.config.pad_token_id
+                            char_frames = _ctc_char_frames(
+                                logits, id_to_char, -1 if blank_id is None else blank_id
                             )
-                            # Add some neural confidence metadata
-                            # To be fully compliant with M4, a real aligner should be used.
-                            # We implement the torchaudio forced_align if available:
-                            if hasattr(torchaudio.functional, "forced_align"):
-                                # We would use forced_align here, but it requires dictionary.
-                                pass
+                            frame_seconds = seg_wav.shape[-1] / float(sr)
+                            words = (seg.text or "").split()
+                            spans = _align_words_to_frames(words, char_frames)
+
+                            if spans is None or not frame_seconds:
+                                word_timestamps = _distribute_word_timestamps(
+                                    words, seg.start, seg.end
+                                )
+                                method = "proportional_fallback"
+                            else:
+                                # Map frame indices back onto the segment's wall-clock
+                                # window, letting each word end where the next begins.
+                                boundaries: list[tuple[float, float]] = []
+                                for start_frame, end_frame in spans:
+                                    rel_start = min(
+                                        max(start_frame * frame_seconds, 0.0), seg.end - seg.start
+                                    )
+                                    rel_end = min(
+                                        max((end_frame + 1) * frame_seconds, rel_start + 1e-3),
+                                        seg.end - seg.start,
+                                    )
+                                    boundaries.append((seg.start + rel_start, seg.start + rel_end))
+                                word_timestamps = [
+                                    {
+                                        "word": w,
+                                        "start": round(boundaries[i][0], 6),
+                                        "end": round(
+                                            boundaries[i + 1][0]
+                                            if i + 1 < len(boundaries)
+                                            else seg.end,
+                                            6,
+                                        ),
+                                    }
+                                    for i, w in enumerate(words)
+                                ]
+                                method = "ctc_greedy"
 
                         except Exception as e:
                             logger.warning("Neural alignment failed for segment: %s", e)
                             word_timestamps = _distribute_word_timestamps(
                                 (seg.text or "").split(), seg.start, seg.end
                             )
+                            method = "proportional_fallback"
 
                     new_meta = dict(seg.metadata)
                     new_meta["word_timestamps"] = word_timestamps
                     new_meta["aligned"] = True
+                    new_meta["alignment_method"] = method
                     aligned_seg = Segment(
                         start=seg.start,
                         end=seg.end,
@@ -207,6 +327,7 @@ class NeuralForcedAlignmentComponent(AlignmentComponent):
                 new_meta = dict(seg.metadata)
                 new_meta["word_timestamps"] = word_timestamps
                 new_meta["aligned"] = True
+                new_meta["alignment_method"] = "proportional_fallback"
                 aligned_seg = Segment(
                     start=seg.start,
                     end=seg.end,

@@ -206,7 +206,11 @@ class RunyankoleASRComponent(ASRComponent):
         result = Result(
             segments=segments,
             source_language=output_lang,
-            provenance={"transfer_basis": "lug->nyn", "asr_provider": "sunbird_transfer"},
+            provenance={
+                **(input.provenance if isinstance(input, (Result, Resource)) else {}),
+                "transfer_basis": "lug->nyn",
+                "asr_provider": "sunbird_transfer",
+            },
             metadata={"asr_model": f"{self.name}@{self.version}", "transfer_basis": "lug->nyn"},
         )
         return result

@@ -60,3 +60,28 @@ def make_provenance(
         "dataset_version": dataset_version,
         **extra,
     }
+
+
+def propagated_provenance(input_obj: Any, **overrides: Any) -> dict:
+    """
+    Build a Result's provenance from the upstream input's, plus this stage's own keys.
+
+    Components that construct a fresh ``Result`` with a literal ``provenance={...}``
+    silently drop upstream keys — most damagingly ``consent_basis``, which later
+    stages use to decide whether voice data may be processed. Echoing the input
+    provenance through makes that class of bug impossible to write by accident.
+
+    Args:
+        input_obj: The upstream ``Resource``, ``Result``, or anything else.
+        **overrides: Keys this stage contributes. These win over inherited keys.
+
+    Returns:
+        A new provenance dict. Non-``None`` ``None`` placeholders from the input
+        are dropped so they cannot shadow real values.
+    """
+    provenance: dict = {}
+    upstream = getattr(input_obj, "provenance", None)
+    if isinstance(upstream, dict):
+        provenance = {k: v for k, v in upstream.items() if v is not None}
+    provenance.update(overrides)
+    return provenance
