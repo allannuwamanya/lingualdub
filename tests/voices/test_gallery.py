@@ -37,6 +37,22 @@ def test_list_presets_filter_language():
     assert len(swa_presets) == 2
     assert all(p.primary_language == "swa" for p in swa_presets)
 
+    hau_presets = list_presets(language="hau")
+    assert len(hau_presets) == 2
+    assert any(p.voice_id == "danladi_hau" for p in hau_presets)
+
+    amh_presets = list_presets(language="amh")
+    assert len(amh_presets) == 2
+    assert any(p.voice_id == "bekele_amh" for p in amh_presets)
+
+    som_presets = list_presets(language="som")
+    assert len(som_presets) == 2
+    assert any(p.voice_id == "warsame_som" for p in som_presets)
+
+    kin_presets = list_presets(language="kin")
+    assert len(kin_presets) == 2
+    assert any(p.voice_id == "gasana_kin" for p in kin_presets)
+
 
 def test_get_preset_voice_success():
     pack = get_preset_voice("kigozi_lug")

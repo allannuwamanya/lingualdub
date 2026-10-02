@@ -53,3 +53,45 @@ def test_lexicon_bidirectional_and_cross_language():
     word_rev = translate_with_lexicon("omusawo eddagala", "lug", "eng")
     assert "doctor" in word_rev
     assert "medicine" in word_rev
+
+
+def test_lexicon_agriculture_domain():
+    # Rainy season inquiry
+    trans_swa = translate_with_lexicon("When does the rainy season begin?", "eng", "swa")
+    assert "mvua" in trans_swa.lower()
+
+    # Fertilizer application in Luganda
+    trans_lug = translate_with_lexicon("Apply fertilizer after two weeks", "eng", "lug")
+    assert "ebijimusa" in trans_lug.lower()
+
+    # Market price of maize in Hausa
+    trans_hau = translate_with_lexicon("The market price of maize is high today", "eng", "hau")
+    assert "masara" in trans_hau.lower()
+
+
+def test_lexicon_mobile_money_domain():
+    # Secret PIN
+    trans_lug = translate_with_lexicon("Enter your secret PIN to confirm transfer", "eng", "lug")
+    assert "ekyama" in trans_lug.lower()
+
+    # Account balance
+    trans_swa = translate_with_lexicon("Your account balance is", "eng", "swa")
+    assert "salio" in trans_swa.lower()
+
+    # Money sent successfully
+    trans_hau = translate_with_lexicon("Money sent successfully", "eng", "hau")
+    assert "kudi" in trans_hau.lower()
+
+
+def test_lexicon_emergency_health_domain():
+    # Boil drinking water
+    trans_lug = translate_with_lexicon("Boil drinking water before use", "eng", "lug")
+    assert "amazzi" in trans_lug.lower()
+
+    # Emergency ambulance in Swahili
+    trans_swa = translate_with_lexicon("Call the emergency ambulance immediately", "eng", "swa")
+    assert "wagonjwa" in trans_swa.lower()
+
+    # Flooding warning in Yoruba
+    trans_yor = translate_with_lexicon("Heavy rain and flooding expected tomorrow", "eng", "yor")
+    assert "òjò" in trans_yor.lower()

@@ -59,11 +59,24 @@ const PRESET_VOICES: VoiceOption[] = [
   { voice_id: 'namubiru_lug', name: 'Namubiru', language: 'lug', gender: 'Female', dialect: 'Central Uganda / Melodic', country: 'Uganda', flag: '🇺🇬' },
   { voice_id: 'mugisha_nyn', name: 'Mugisha', language: 'nyn', gender: 'Male', dialect: 'Western Uganda / Ankole', country: 'Uganda', flag: '🇺🇬' },
   { voice_id: 'kemigisha_nyn', name: 'Kemigisha', language: 'nyn', gender: 'Female', dialect: 'Western Uganda / Mbarara', country: 'Uganda', flag: '🇺🇬' },
+  { voice_id: 'okello_ach', name: 'Okello', language: 'ach', gender: 'Male', dialect: 'Northern Uganda / Acholi', country: 'Uganda', flag: '🇺🇬' },
   { voice_id: 'amina_swa', name: 'Amina', language: 'swa', gender: 'Female', dialect: 'Coastal Swahili / Broadcast', country: 'Tanzania/Kenya', flag: '🇹🇿' },
   { voice_id: 'juma_swa', name: 'Juma', language: 'swa', gender: 'Male', dialect: 'Standard Swahili / Deep Voice', country: 'Kenya', flag: '🇰🇪' },
   { voice_id: 'ade_yor', name: 'Ade', language: 'yor', gender: 'Male', dialect: 'Lagos Urban / Tonal Yoruba', country: 'Nigeria', flag: '🇳🇬' },
+  { voice_id: 'funke_yor', name: 'Funke', language: 'yor', gender: 'Female', dialect: 'Ibadan / Melodic Yoruba', country: 'Nigeria', flag: '🇳🇬' },
   { voice_id: 'ngozi_ibo', name: 'Ngozi', language: 'ibo', gender: 'Female', dialect: 'Igbo Central / Expressive', country: 'Nigeria', flag: '🇳🇬' },
+  { voice_id: 'chukwudi_ibo', name: 'Chukwudi', language: 'ibo', gender: 'Male', dialect: 'Owerri / Authoritative Igbo', country: 'Nigeria', flag: '🇳🇬' },
+  { voice_id: 'danladi_hau', name: 'Danladi', language: 'hau', gender: 'Male', dialect: 'Kano / Resonant Hausa', country: 'Nigeria', flag: '🇳🇬' },
+  { voice_id: 'fatima_hau', name: 'Fatima', language: 'hau', gender: 'Female', dialect: 'Kaduna / Articulate Hausa', country: 'Nigeria', flag: '🇳🇬' },
   { voice_id: 'zola_zul', name: 'Zola', language: 'zul', gender: 'Male', dialect: 'isiZulu / KwaZulu-Natal', country: 'South Africa', flag: '🇿🇦' },
+  { voice_id: 'thandeka_zul', name: 'Thandeka', language: 'zul', gender: 'Female', dialect: 'Urban Zulu / Modern Media', country: 'South Africa', flag: '🇿🇦' },
+  { voice_id: 'bekele_amh', name: 'Bekele', language: 'amh', gender: 'Male', dialect: 'Addis Ababa / Dignified Amharic', country: 'Ethiopia', flag: '🇪🇹' },
+  { voice_id: 'selam_amh', name: 'Selam', language: 'amh', gender: 'Female', dialect: 'Shewa / Gentle Amharic', country: 'Ethiopia', flag: '🇪🇹' },
+  { voice_id: 'warsame_som', name: 'Warsame', language: 'som', gender: 'Male', dialect: 'Northern Somali / Command', country: 'Somalia', flag: '🇸🇴' },
+  { voice_id: 'deqa_som', name: 'Deqa', language: 'som', gender: 'Female', dialect: 'Benadiri / Lively Somali', country: 'Somalia', flag: '🇸🇴' },
+  { voice_id: 'gasana_kin', name: 'Gasana', language: 'kin', gender: 'Male', dialect: 'Kigali / Trustworthy Kinyarwanda', country: 'Rwanda', flag: '🇷🇼' },
+  { voice_id: 'uwase_kin', name: 'Uwase', language: 'kin', gender: 'Female', dialect: 'Southern / Melodic Kinyarwanda', country: 'Rwanda', flag: '🇷🇼' },
+  { voice_id: 'modou_wol', name: 'Modou', language: 'wol', gender: 'Male', dialect: 'Dakar / Rhythmic Wolof', country: 'Senegal', flag: '🇸🇳' },
 ];
 
 const LANGUAGE_SAMPLES: Record<string, string> = {
@@ -73,13 +86,23 @@ const LANGUAGE_SAMPLES: Record<string, string> = {
   ach: 'Wamoti maber i LingualDub. Dwani pa lwak me Africa tye kany.',
   yor: 'Ẹ káàbọ̀ sí orí ètò ìgbóhùnsáfẹ́fẹ́ wa. Inú wa dùn púpọ̀ láti pàdé yín lónìí.',
   ibo: 'Nnọọ nke ọma na LingualDub. Anyị nwere obi ụtọ izute gị taa.',
-  hau: 'Barka da zuwa dandalin muryar Afrika na zamani.',
+  hau: 'Barka da zuwa dandalin muryar Afrika na zamani. Muna farin cikin haduwa da ku yau.',
   zul: 'Siyakwamukela kule ngxenyekazi yezwi lase-Afrika esezingeni eliphezulu.',
   xho: 'Wamkelekile kwi-LingualDub, iqonga lezwi lemveli lase-Afrika.',
-  kin: 'Murakaza neza kuri LingualDub. Twishimiye kubakira uyu munsi.',
+  kin: 'Murakaza neza kuri LingualDub. Twishimiye kubakira uyu munsi mu rurimi rwacu rwiza.',
+  som: 'Ku soo dhowow madasha codadka casriga ah ee Afrika. Aad baannu ugu faraxsanahay la kulankaaga.',
   amh: 'እንኳን ወደ ሊንግዋል ደብ በደህና መጡ። የአፍሪካ ቋንቋዎች የድምጽ ቴክኖሎጂ።',
+  wol: 'Dalal ak jamm ci LingualDub, baat yi gën a ràññeeku ci Afrik.',
   lin: 'Boyei bolamu na LingualDub, platform ya mongongo ya Afrika.'
 };
+
+const DOMAIN_TEMPLATES = [
+  { id: 'agri', label: '🌾 Agritech', text: 'When does the rainy season begin? Apply fertilizer after two weeks.' },
+  { id: 'momo', label: '💳 Mobile Money', text: 'Enter your secret PIN to confirm transfer. Money sent successfully.' },
+  { id: 'health', label: '🏥 Clinical', text: 'Please sit down while we register your information. The doctor will see you shortly.' },
+  { id: 'alert', label: '⚠️ Weather Alert', text: 'Boil drinking water before use. Heavy rain and flooding expected tomorrow.' },
+  { id: 'chat', label: '🗣️ Conversational', text: 'Hello, how are you? Welcome to our African voice platform.' },
+];
 
 export default function Studio() {
   const [activeTab, setActiveTab] = useState<'speech' | 'gallery' | 'cloner' | 'agent' | 'dubbing' | 'mastering' | 'settings'>('speech');
@@ -199,7 +222,11 @@ export default function Studio() {
             flag: v.language === 'lug' || v.language === 'nyn' || v.language === 'ach' ? '🇺🇬' :
                   v.language === 'swa' ? '🇰🇪' :
                   v.language === 'yor' || v.language === 'ibo' || v.language === 'hau' ? '🇳🇬' :
-                  v.language === 'zul' || v.language === 'xho' ? '🇿🇦' : '🌍'
+                  v.language === 'zul' || v.language === 'xho' ? '🇿🇦' :
+                  v.language === 'amh' ? '🇪🇹' :
+                  v.language === 'som' ? '🇸🇴' :
+                  v.language === 'kin' ? '🇷🇼' :
+                  v.language === 'wol' ? '🇸🇳' : '🌍'
           }));
           setVoices(merged);
         }
@@ -588,6 +615,25 @@ export default function Studio() {
                       className="px-2.5 py-1 bg-dark-surface hover:bg-brand-500/20 text-brand-300 hover:text-white border border-dark-border rounded-md text-xs font-mono transition-colors"
                     >
                       {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Domain Template Chips */}
+              <div>
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                  Domain Templates
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {DOMAIN_TEMPLATES.map((tmpl) => (
+                    <button
+                      key={tmpl.id}
+                      type="button"
+                      onClick={() => setSpeechText(tmpl.text)}
+                      className="px-2.5 py-1 bg-dark-surface hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 border border-dark-border rounded-lg text-xs transition-colors"
+                    >
+                      {tmpl.label}
                     </button>
                   ))}
                 </div>
@@ -1046,18 +1092,38 @@ export default function Studio() {
                   onChange={(e) => setDubTgtLang(e.target.value)}
                   className="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-sm text-slate-100"
                 >
-                  <option value="lug">Luganda</option>
-                  <option value="swa">Swahili</option>
-                  <option value="nyn">Runyankore</option>
-                  <option value="yor">Yoruba</option>
-                  <option value="ibo">Igbo</option>
-                  <option value="zul">isiZulu</option>
+                  <option value="lug">Luganda (Uganda)</option>
+                  <option value="swa">Swahili (East Africa)</option>
+                  <option value="nyn">Runyankore (Uganda)</option>
+                  <option value="yor">Yoruba (Nigeria)</option>
+                  <option value="ibo">Igbo (Nigeria)</option>
+                  <option value="hau">Hausa (West Africa)</option>
+                  <option value="zul">isiZulu (South Africa)</option>
+                  <option value="amh">Amharic (Ethiopia)</option>
+                  <option value="som">Somali (Horn of Africa)</option>
+                  <option value="kin">Kinyarwanda (Rwanda)</option>
+                  <option value="wol">Wolof (Senegal)</option>
+                  <option value="ach">Acholi (Uganda)</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-2">Source Script</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-semibold text-slate-300 block">Source Script</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {DOMAIN_TEMPLATES.map((tmpl) => (
+                    <button
+                      key={tmpl.id}
+                      type="button"
+                      onClick={() => setDubSrcText(tmpl.text)}
+                      className="px-2 py-0.5 bg-dark-surface hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 border border-dark-border rounded text-[11px] transition-colors"
+                    >
+                      {tmpl.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <textarea
                 value={dubSrcText}
                 onChange={(e) => setDubSrcText(e.target.value)}
