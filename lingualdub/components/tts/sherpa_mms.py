@@ -65,6 +65,7 @@ class SherpaMMSTTSComponent(TTSComponent):
             lexicon_path=lexicon_path,
             tokens_path=tokens_path,
             data_dir=data_dir,
+            language=self.language,
         )
 
     def _write_wav(self, dest: Path, rate: int, samples: Any) -> None:

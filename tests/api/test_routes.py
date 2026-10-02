@@ -55,3 +55,34 @@ def test_speech_api_handler_clone_voice(tmp_path):
     assert res["status"] == "ok"
     assert "voice_id" in res
     assert store.get(res["voice_id"]) is not None
+
+
+def test_speech_api_handler_models():
+    handler = SpeechAPIHandler()
+    models = handler.handle_list_models()
+    assert len(models) >= 8
+    assert any(m["model_id"] == "sherpa_mms_lug" for m in models)
+
+
+def test_speech_api_handler_pull_validation():
+    handler = SpeechAPIHandler()
+    with pytest.raises(ValueError, match="model_id"):
+        handler.handle_pull_model({})
+
+    with pytest.raises(ValueError, match="model_id"):
+        handler.handle_remove_model({})
+
+
+def test_speech_api_handler_pull_and_remove(tmp_path):
+    from unittest.mock import patch
+
+    handler = SpeechAPIHandler()
+    with patch("lingualdub.models.manager.ModelManager.download", return_value=tmp_path / "model"):
+        res = handler.handle_pull_model({"model_id": "sherpa_mms_lug"})
+        assert res["status"] == "success"
+        assert res["model_id"] == "sherpa_mms_lug"
+
+    with patch("lingualdub.models.manager.ModelManager.delete", return_value=True):
+        res = handler.handle_remove_model({"model_id": "sherpa_mms_lug"})
+        assert res["status"] == "success"
+        assert res["deleted"] is True

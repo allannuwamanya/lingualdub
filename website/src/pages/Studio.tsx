@@ -16,8 +16,23 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  StopCircle
+  StopCircle,
+  HardDrive,
+  Trash2,
 } from 'lucide-react';
+
+interface ModelItem {
+  model_id: string;
+  name: string;
+  family: string;
+  task: string;
+  languages: string[];
+  size_mb: number;
+  ram_mb: number;
+  is_downloaded: boolean;
+  local_path: string | null;
+  description: string;
+}
 
 interface VoiceOption {
   voice_id: string;
@@ -190,7 +205,59 @@ export default function Studio() {
         }
       })
       .catch(() => {});
+
+    fetchModels();
   }, []);
+
+  const [models, setModels] = useState<ModelItem[]>([]);
+  const [pullingModelId, setPullingModelId] = useState<string | null>(null);
+
+  const fetchModels = async () => {
+    try {
+      const res = await fetch('/v1/models');
+      const data = await res.json();
+      if (data.models) {
+        setModels(data.models);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handlePullModel = async (modelId: string) => {
+    setPullingModelId(modelId);
+    try {
+      const res = await fetch('/v1/models/pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_id: modelId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchModels();
+      } else {
+        alert(`Download failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert(`Network error: ${err}`);
+    } finally {
+      setPullingModelId(null);
+    }
+  };
+
+  const handleRemoveModel = async (modelId: string) => {
+    if (!confirm(`Delete local weights for ${modelId}?`)) return;
+    try {
+      await fetch('/v1/models/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_id: modelId }),
+      });
+      await fetchModels();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleSynthesize = async () => {
     if (!speechText.trim()) return;
@@ -1217,6 +1284,101 @@ export default function Studio() {
                   <span>No key set. Using local offline engines and browser speech synthesis.</span>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Offline Neural Models Hub */}
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-xl space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-emerald-400" />
+                  Offline Neural Models Hub (Zero-Bandwidth)
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Manage local INT8 & GGUF model weights for zero-cloud offline speech, translation, and ASR.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchModels}
+                className="p-2 hover:bg-white/5 rounded-xl border border-dark-border text-slate-400 hover:text-white transition-all text-xs flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh Hub
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+              {models.map((model) => (
+                <div
+                  key={model.model_id}
+                  className="p-4 bg-dark-surface border border-dark-border rounded-xl space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="font-semibold text-xs text-white leading-tight">
+                        {model.name}
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {model.task}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                      {model.description}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 font-mono">
+                      <span>Size: {model.size_mb} MB</span>
+                      <span>•</span>
+                      <span>RAM: ~{model.ram_mb} MB</span>
+                      <span>•</span>
+                      <span>{model.languages.slice(0, 3).join(', ')}{model.languages.length > 3 ? '...' : ''}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-dark-border flex items-center justify-between">
+                    <div>
+                      {model.is_downloaded ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Ready Offline
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-500">
+                          Not Installed ({model.size_mb} MB)
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {model.is_downloaded ? (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveModel(model.model_id)}
+                          className="px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs flex items-center gap-1 transition-all"
+                          title="Delete from local cache"
+                        >
+                          <Trash2 className="w-3 h-3" /> Reclaim
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={pullingModelId === model.model_id}
+                          onClick={() => handlePullModel(model.model_id)}
+                          className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-slate-950 font-bold rounded-lg text-xs flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/10"
+                        >
+                          {pullingModelId === model.model_id ? (
+                            <>
+                              <RefreshCw className="w-3 h-3 animate-spin" /> Pulling...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-3 h-3" /> Pull Weights
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -34,10 +34,12 @@ class SherpaMMSEngine(BaseEngine):
         lexicon_path: str | Path | None = None,
         tokens_path: str | Path | None = None,
         data_dir: str | Path | None = None,
+        language: str | None = None,
         num_threads: int = 2,
         sample_rate: int = 16000,
     ) -> None:
         super().__init__()
+        self.language = language
         self.model_path = str(model_path) if model_path else None
         self.lexicon_path = str(lexicon_path) if lexicon_path else None
         self.tokens_path = str(tokens_path) if tokens_path else None
@@ -45,6 +47,19 @@ class SherpaMMSEngine(BaseEngine):
         self.num_threads = num_threads
         self.sample_rate = sample_rate
         self._tts: Any = None
+
+        if (not self.model_path or not self.tokens_path) and self.language:
+            try:
+                from lingualdub.models.manager import ModelManager
+
+                m_dir = ModelManager().find_mms_model_for_language(self.language)
+                if m_dir:
+                    self.model_path = str(m_dir / "model.onnx")
+                    self.tokens_path = str(m_dir / "tokens.txt")
+                    if (m_dir / "lexicon.txt").is_file():
+                        self.lexicon_path = str(m_dir / "lexicon.txt")
+            except Exception as exc:
+                logger.debug("Auto-resolving MMS model cache failed: %s", exc)
 
     def is_available(self) -> bool:
         """Check if sherpa_onnx runtime is installed."""

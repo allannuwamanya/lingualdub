@@ -40,8 +40,16 @@ class CTranslate2NLLBEngine(BaseEngine):
         inter_threads: int = 1,
         intra_threads: int = 4,
     ) -> None:
-        super().__init__()
-        self.model_path = str(model_path) if model_path else DEFAULT_CT2_NLLB_MODEL
+        if not model_path:
+            try:
+                from lingualdub.models.manager import ModelManager
+
+                cached_path = ModelManager().get_model_path("ct2_nllb")
+                self.model_path = str(cached_path) if cached_path else DEFAULT_CT2_NLLB_MODEL
+            except Exception:
+                self.model_path = DEFAULT_CT2_NLLB_MODEL
+        else:
+            self.model_path = str(model_path)
         self.device = device
         self.compute_type = compute_type
         self.inter_threads = inter_threads

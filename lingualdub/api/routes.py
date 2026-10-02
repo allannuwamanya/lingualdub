@@ -301,3 +301,42 @@ class SpeechAPIHandler:
             "samples_count": len(samples),
         }
 
+    def handle_list_models(self) -> list[dict[str, Any]]:
+        """List all offline neural models and their download status."""
+        from lingualdub.models.manager import ModelManager
+
+        manager = ModelManager()
+        return manager.list_models()
+
+    def handle_pull_model(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Download model weights from Hugging Face."""
+        from lingualdub.models.manager import ModelManager
+
+        model_id = payload.get("model_id")
+        if not model_id:
+            raise ValueError("Field 'model_id' is required.")
+
+        manager = ModelManager()
+        path = manager.download(model_id)
+        return {
+            "status": "success",
+            "model_id": model_id,
+            "local_path": str(path),
+        }
+
+    def handle_remove_model(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Remove model weights from local cache."""
+        from lingualdub.models.manager import ModelManager
+
+        model_id = payload.get("model_id")
+        if not model_id:
+            raise ValueError("Field 'model_id' is required.")
+
+        manager = ModelManager()
+        deleted = manager.delete(model_id)
+        return {
+            "status": "success" if deleted else "not_found",
+            "model_id": model_id,
+            "deleted": deleted,
+        }
+

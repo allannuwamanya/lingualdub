@@ -135,3 +135,11 @@ def test_quantized_nllb_component_run_with_mock_engine():
         source_language="lug",
         target_language="eng",
     )
+
+
+def test_ct2_nllb_auto_resolve_cached(tmp_path):
+    from unittest.mock import patch
+
+    with patch("lingualdub.models.manager.ModelManager.get_model_path", return_value=tmp_path / "nllb_int8"):
+        engine = CTranslate2NLLBEngine()
+        assert engine.model_path == str(tmp_path / "nllb_int8")

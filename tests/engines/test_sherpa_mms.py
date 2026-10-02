@@ -176,3 +176,17 @@ def test_sherpa_mms_component_degrade(tmp_path):
     assert len(degraded.artifacts) >= 1
     assert Path(degraded.artifacts[0]).exists()
     assert any("SherpaMMSTTSComponent" in w for w in degraded.warnings)
+
+
+def test_sherpa_mms_auto_resolve_cached(tmp_path: Path):
+    from unittest.mock import patch
+
+    with patch("lingualdub.models.manager.ModelManager.find_mms_model_for_language", return_value=tmp_path):
+        (tmp_path / "model.onnx").write_bytes(b"data")
+        (tmp_path / "tokens.txt").write_text("a 0")
+        (tmp_path / "lexicon.txt").write_text("lexicon")
+
+        engine = SherpaMMSEngine(language="lug")
+        assert engine.model_path == str(tmp_path / "model.onnx")
+        assert engine.tokens_path == str(tmp_path / "tokens.txt")
+        assert engine.lexicon_path == str(tmp_path / "lexicon.txt")

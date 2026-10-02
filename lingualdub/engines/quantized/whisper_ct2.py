@@ -34,8 +34,17 @@ class FasterWhisperEngine(BaseEngine):
         compute_type: str = "int8",
         cpu_threads: int = 4,
     ) -> None:
-        super().__init__()
-        self.model_size_or_path = model_size_or_path
+        resolved = model_size_or_path
+        if model_size_or_path in ("tiny", "small"):
+            try:
+                from lingualdub.models.manager import ModelManager
+
+                cached_whisper = ModelManager().get_model_path(f"whisper_{model_size_or_path}")
+                if cached_whisper:
+                    resolved = str(cached_whisper)
+            except Exception:
+                pass
+        self.model_size_or_path = resolved
         self.device = device
         self.compute_type = compute_type
         self.cpu_threads = cpu_threads

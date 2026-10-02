@@ -76,6 +76,11 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"voices": voices})
             return
 
+        if self.path == "/v1/models" or self.path.startswith("/v1/models?"):
+            models = self.handler.handle_list_models()
+            self._send_json(200, {"models": models})
+            return
+
         # Serve compiled modern web application (website/dist)
         from pathlib import Path
         dist_dir = Path(__file__).resolve().parent.parent.parent / "website" / "dist"
@@ -147,6 +152,22 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/v1/studio/master":
             try:
                 res = self.handler.handle_studio_master(payload)
+                self._send_json(200, res)
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+            return
+
+        if self.path == "/v1/models/pull":
+            try:
+                res = self.handler.handle_pull_model(payload)
+                self._send_json(200, res)
+            except Exception as exc:
+                self._send_json(400, {"error": str(exc)})
+            return
+
+        if self.path == "/v1/models/remove":
+            try:
+                res = self.handler.handle_remove_model(payload)
                 self._send_json(200, res)
             except Exception as exc:
                 self._send_json(400, {"error": str(exc)})

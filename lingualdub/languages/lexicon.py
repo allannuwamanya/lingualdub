@@ -212,7 +212,7 @@ def translate_with_lexicon(text: str, source_language: str, target_language: str
 
     # Check reverse / cross-language match (source is African language)
     for phrase, lang_map in sorted_phrases:
-        for src_lang, src_val in lang_map.items():
+        for _src_lang, src_val in lang_map.items():
             norm_val = _normalize(src_val)
             if norm == norm_val or norm.startswith(norm_val):
                 if is_tgt_eng:
@@ -240,7 +240,7 @@ def translate_with_lexicon(text: str, source_language: str, target_language: str
         # Reverse match (African word)
         if not matched:
             for eng_word, lang_dict in WORD_DICTIONARY.items():
-                for s_lang, s_val in lang_dict.items():
+                for _s_lang, s_val in lang_dict.items():
                     if clean_w == _normalize(s_val):
                         if is_tgt_eng:
                             translated_words.append(eng_word + punct)

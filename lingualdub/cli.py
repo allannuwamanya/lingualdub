@@ -709,6 +709,71 @@ def cmd_mcp(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_models(args: argparse.Namespace) -> int:
+    """Manage offline neural model weights (Sherpa MMS, NLLB-200, Faster-Whisper, OmniVoice)."""
+    from lingualdub.models.manager import ModelManager
+
+    manager = ModelManager()
+    sub = getattr(args, "models_subcommand", None)
+
+    if sub == "list":
+        models = manager.list_models(
+            family=getattr(args, "family", None),
+            task=getattr(args, "task", None),
+        )
+        print(f"{'MODEL ID':<20} {'NAME':<36} {'TASK':<12} {'SIZE':<10} {'STATUS':<14}")
+        print("-" * 95)
+        for m in models:
+            status = "DOWNLOADED" if m["is_downloaded"] else "AVAILABLE"
+            size_str = f"{m['size_mb']:.0f} MB"
+            print(f"{m['model_id']:<20} {m['name'][:34]:<36} {m['task']:<12} {size_str:<10} {status:<14}")
+        return 0
+
+    elif sub == "pull":
+        model_id = args.model
+        if getattr(args, "lang", None) and model_id in ("sherpa_mms", "mms"):
+            model_id = f"sherpa_mms_{args.lang.lower()}"
+
+        print(f"Pulling model weights for '{model_id}' from Hugging Face...")
+        try:
+            path = manager.download(model_id)
+            print(f"Successfully downloaded '{model_id}' to: {path}")
+            return 0
+        except Exception as exc:
+            logger.error("Failed to pull model %s: %s", model_id, exc)
+            print(f"Error: {exc}")
+            return 1
+
+    elif sub == "remove":
+        model_id = args.model
+        if getattr(args, "lang", None) and model_id in ("sherpa_mms", "mms"):
+            model_id = f"sherpa_mms_{args.lang.lower()}"
+
+        deleted = manager.delete(model_id)
+        if deleted:
+            print(f"Successfully deleted cache for '{model_id}'.")
+            return 0
+        else:
+            print(f"Model '{model_id}' was not found in cache.")
+            return 1
+
+    elif sub == "path":
+        model_id = args.model
+        if getattr(args, "lang", None) and model_id in ("sherpa_mms", "mms"):
+            model_id = f"sherpa_mms_{args.lang.lower()}"
+
+        p = manager.get_model_path(model_id)
+        if p:
+            print(str(p))
+            return 0
+        else:
+            print(f"Model '{model_id}' is not downloaded.")
+            return 1
+
+    print("Use: lingualdub models [list|pull|remove|path] --help")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="lingualdub",
@@ -787,6 +852,38 @@ def main(argv: list[str] | None = None) -> int:
         "mcp", help="Start the Model Context Protocol (MCP) server for AI coding agents"
     )
 
+    # lingualdub models ...
+    models_parser = subparsers.add_parser(
+        "models", help="Manage offline neural models and weights"
+    )
+    models_sub = models_parser.add_subparsers(dest="models_subcommand")
+
+    # lingualdub models list
+    list_m_parser = models_sub.add_parser("list", help="List available and downloaded models")
+    list_m_parser.add_argument(
+        "--family", "-f", help="Filter by family (sherpa_mms, ct2_nllb, faster_whisper, omnivoice)"
+    )
+    list_m_parser.add_argument(
+        "--task", "-t", help="Filter by task (tts, translation, asr, voice_clone)"
+    )
+
+    # lingualdub models pull <model> [--lang <lang>]
+    pull_parser = models_sub.add_parser("pull", help="Download model weights from Hugging Face")
+    pull_parser.add_argument(
+        "model", help="Model ID (e.g. sherpa_mms_lug, ct2_nllb, whisper_tiny) or family"
+    )
+    pull_parser.add_argument("--lang", "-l", help="Language code if pulling per-language model")
+
+    # lingualdub models remove <model> [--lang <lang>]
+    rm_parser = models_sub.add_parser("remove", help="Remove downloaded model from local cache")
+    rm_parser.add_argument("model", help="Model ID to remove")
+    rm_parser.add_argument("--lang", "-l", help="Language code if per-language model")
+
+    # lingualdub models path <model> [--lang <lang>]
+    path_parser = models_sub.add_parser("path", help="Print local cache path for a downloaded model")
+    path_parser.add_argument("model", help="Model ID")
+    path_parser.add_argument("--lang", "-l", help="Language code if per-language model")
+
     args = parser.parse_args(argv)
     if args.subcommand == "dub":
         return cmd_dub(args)
@@ -800,6 +897,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_serve(args)
     elif args.subcommand == "mcp":
         return cmd_mcp(args)
+    elif args.subcommand == "models":
+        return cmd_models(args)
     else:
         parser.print_help()
         return 0

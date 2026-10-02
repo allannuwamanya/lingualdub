@@ -155,3 +155,11 @@ def test_faster_whisper_component_run_success(tmp_path):
     assert out.source_language == "lug"
     assert out.metadata["compute_type"] == "int8"
     mock_engine.transcribe.assert_called_once_with(audio_path=str(audio_path), language="lug")
+
+
+def test_faster_whisper_auto_resolve_cached(tmp_path):
+    from unittest.mock import patch
+
+    with patch("lingualdub.models.manager.ModelManager.get_model_path", return_value=tmp_path / "whisper_cache"):
+        engine = FasterWhisperEngine(model_size_or_path="tiny")
+        assert engine.model_size_or_path == str(tmp_path / "whisper_cache")

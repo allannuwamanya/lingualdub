@@ -112,6 +112,27 @@ def test_api_server_endpoints():
             assert resp.status == 204
             assert resp.headers.get("Access-Control-Allow-Origin") == "*"
 
+        # 9. Test GET /v1/models
+        req = urllib.request.Request(f"{base_url}/v1/models")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode())
+            assert "models" in data
+            assert len(data["models"]) > 0
+            assert any(m["model_id"] == "sherpa_mms_lug" for m in data["models"])
+
+        # 10. Test POST /v1/models/pull validation
+        req = urllib.request.Request(
+            f"{base_url}/v1/models/pull",
+            data=json.dumps({}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        import pytest
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req, timeout=5)
+        assert exc_info.value.code == 400
+
     finally:
         server.shutdown()
         server.server_close()
