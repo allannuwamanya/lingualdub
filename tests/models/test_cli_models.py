@@ -33,14 +33,18 @@ def test_cli_models_pull_success(capsys, tmp_path: Path):
 
 
 def test_cli_models_pull_with_lang(capsys, tmp_path: Path):
-    with patch("lingualdub.models.manager.ModelManager.download", return_value=tmp_path / "model") as mock_dl:
+    with patch(
+        "lingualdub.models.manager.ModelManager.download", return_value=tmp_path / "model"
+    ) as mock_dl:
         rc = main(["models", "pull", "sherpa_mms", "--lang", "swa"])
         assert rc == 0
         mock_dl.assert_called_once_with("sherpa_mms_swa")
 
 
 def test_cli_models_pull_failure(capsys):
-    with patch("lingualdub.models.manager.ModelManager.download", side_effect=RuntimeError("Network down")):
+    with patch(
+        "lingualdub.models.manager.ModelManager.download", side_effect=RuntimeError("Network down")
+    ):
         rc = main(["models", "pull", "sherpa_mms_lug"])
         assert rc == 1
         captured = capsys.readouterr()
@@ -60,7 +64,9 @@ def test_cli_models_remove(capsys):
 
 
 def test_cli_models_path(capsys, tmp_path: Path):
-    with patch("lingualdub.models.manager.ModelManager.get_model_path", return_value=tmp_path / "dir"):
+    with patch(
+        "lingualdub.models.manager.ModelManager.get_model_path", return_value=tmp_path / "dir"
+    ):
         rc = main(["models", "path", "sherpa_mms_lug"])
         assert rc == 0
         assert str(tmp_path / "dir") in capsys.readouterr().out

@@ -113,11 +113,17 @@ class ConversationalVoiceAgent:
         text_lower = user_text.lower().strip()
 
         # Luganda Health & Medical inquiries
-        if any(w in text_lower for w in ("omutwe", "omubiri", "eddagala", "omusawo", "eddwaliro", "obulumi")):
+        if any(
+            w in text_lower
+            for w in ("omutwe", "omubiri", "eddagala", "omusawo", "eddwaliro", "obulumi")
+        ):
             return "Ntegedde obulumi bw'olina. Nsaba owummulemu katono, era osobole okulaba omusawo w'ebyobulamu mu ddwaliro eri okumpi naawe."
 
         # Swahili Health & Medical inquiries
-        if any(w in text_lower for w in ("kichwa", "ugonjwa", "dawa", "daktari", "hospitali", "maumivu")):
+        if any(
+            w in text_lower
+            for w in ("kichwa", "ugonjwa", "dawa", "daktari", "hospitali", "maumivu")
+        ):
             return "Pole sana kwa hali unayopitia. Tafadhali pumzika vizuri na umuone daktari katika kituo cha afya kilicho karibu nawe."
 
         # Luganda Greetings
@@ -141,7 +147,6 @@ class ConversationalVoiceAgent:
         elif self.language == "nyn":
             return f"Nnyetegyereize gye: '{user_text}'. Ndi aha kukuhwera omu by'amaraka n'endimi zaitu."
         return f"Ntegedde bulungi kye ngambye: '{user_text}'. Ndi wano okukuyamba ku buli kimu ekikwata ku maloboozi n'ennimi zaffe."
-
 
     def user_speaks(self, text: str) -> None:
         """Record user speech and trigger barge-in if agent is speaking."""

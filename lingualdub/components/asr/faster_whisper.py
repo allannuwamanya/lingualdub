@@ -22,7 +22,16 @@ from lingualdub.utils.provenance import propagated_provenance
 logger = logging.getLogger(__name__)
 
 FASTER_WHISPER_LANGUAGES = [
-    "lug", "nyn", "swa", "eng", "hau", "yor", "ibo", "lin", "afr", "fra",
+    "lug",
+    "nyn",
+    "swa",
+    "eng",
+    "hau",
+    "yor",
+    "ibo",
+    "lin",
+    "afr",
+    "fra",
 ]
 
 

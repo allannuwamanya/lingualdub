@@ -162,7 +162,9 @@ class VoicePack:
         """
         Extract reference audio to a local WAV file and return its Path.
         """
-        out_dir = Path(target_dir) if target_dir else Path(tempfile.gettempdir()) / "lingualdub_voices"
+        out_dir = (
+            Path(target_dir) if target_dir else Path(tempfile.gettempdir()) / "lingualdub_voices"
+        )
         out_dir.mkdir(parents=True, exist_ok=True)
         out_file = out_dir / f"{self.metadata.voice_id}_ref.wav"
         out_file.write_bytes(self.reference_audio_bytes)

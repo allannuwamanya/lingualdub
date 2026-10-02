@@ -726,7 +726,9 @@ def cmd_models(args: argparse.Namespace) -> int:
         for m in models:
             status = "DOWNLOADED" if m["is_downloaded"] else "AVAILABLE"
             size_str = f"{m['size_mb']:.0f} MB"
-            print(f"{m['model_id']:<20} {m['name'][:34]:<36} {m['task']:<12} {size_str:<10} {status:<14}")
+            print(
+                f"{m['model_id']:<20} {m['name'][:34]:<36} {m['task']:<12} {size_str:<10} {status:<14}"
+            )
         return 0
 
     elif sub == "pull":
@@ -844,7 +846,9 @@ def main(argv: list[str] | None = None) -> int:
     serve_parser = subparsers.add_parser(
         "serve", help="Start the OpenAI & ElevenLabs-compatible African voice HTTP server"
     )
-    serve_parser.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
+    serve_parser.add_argument(
+        "--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)"
+    )
     serve_parser.add_argument("--port", "-p", type=int, default=8000, help="Port (default: 8000)")
 
     # lingualdub mcp ...
@@ -853,9 +857,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # lingualdub models ...
-    models_parser = subparsers.add_parser(
-        "models", help="Manage offline neural models and weights"
-    )
+    models_parser = subparsers.add_parser("models", help="Manage offline neural models and weights")
     models_sub = models_parser.add_subparsers(dest="models_subcommand")
 
     # lingualdub models list
@@ -880,7 +882,9 @@ def main(argv: list[str] | None = None) -> int:
     rm_parser.add_argument("--lang", "-l", help="Language code if per-language model")
 
     # lingualdub models path <model> [--lang <lang>]
-    path_parser = models_sub.add_parser("path", help="Print local cache path for a downloaded model")
+    path_parser = models_sub.add_parser(
+        "path", help="Print local cache path for a downloaded model"
+    )
     path_parser.add_argument("model", help="Model ID")
     path_parser.add_argument("--lang", "-l", help="Language code if per-language model")
 

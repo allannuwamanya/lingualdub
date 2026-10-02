@@ -23,8 +23,22 @@ from lingualdub.utils.consent import ensure_consent
 logger = logging.getLogger(__name__)
 
 SHERPA_MMS_LANGUAGES = [
-    "lug", "nyn", "swa", "eng", "ach", "teo", "lgg",
-    "yor", "ibo", "hau", "zul", "xho", "kin", "som", "amh", "lin",
+    "lug",
+    "nyn",
+    "swa",
+    "eng",
+    "ach",
+    "teo",
+    "lgg",
+    "yor",
+    "ibo",
+    "hau",
+    "zul",
+    "xho",
+    "kin",
+    "som",
+    "amh",
+    "lin",
 ]
 
 
@@ -148,10 +162,16 @@ class SherpaMMSTTSComponent(TTSComponent):
 
             try:
                 # Adjust speed if compression strategy chosen
-                speed = min(1.35, max(0.7, 1.0 / ratio)) if strategy == FittingStrategy.COMPRESS else 1.0
+                speed = (
+                    min(1.35, max(0.7, 1.0 / ratio))
+                    if strategy == FittingStrategy.COMPRESS
+                    else 1.0
+                )
                 sample_rate, samples = self.engine.synthesize(text, speed=speed)
 
-                audio_file = self.output_dir / f"sherpa_mms_{self.language}_seg_{idx}_{self.version}.wav"
+                audio_file = (
+                    self.output_dir / f"sherpa_mms_{self.language}_seg_{idx}_{self.version}.wav"
+                )
                 self._write_wav(audio_file, sample_rate, samples)
                 artifacts.append(str(audio_file))
 
@@ -169,7 +189,9 @@ class SherpaMMSTTSComponent(TTSComponent):
                     )
                 )
             except Exception as exc:
-                logger.warning("Sherpa MMS synthesis failed on segment #%d (%r): %s", idx, text, exc)
+                logger.warning(
+                    "Sherpa MMS synthesis failed on segment #%d (%r): %s", idx, text, exc
+                )
                 warnings.append(f"Sherpa MMS synthesis failed on segment #{idx}: {exc}")
 
         return Result(

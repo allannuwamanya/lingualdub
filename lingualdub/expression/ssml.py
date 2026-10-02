@@ -29,7 +29,9 @@ CUE_PATTERN = re.compile(
 )
 
 # Regex to match basic XML SSML <break time="..."/> tags
-SSML_BREAK_PATTERN = re.compile(r'<break\s+time=["\'](\d+(?:\.\d+)?)(ms|s)["\']\s*/?>', re.IGNORECASE)
+SSML_BREAK_PATTERN = re.compile(
+    r'<break\s+time=["\'](\d+(?:\.\d+)?)(ms|s)["\']\s*/?>', re.IGNORECASE
+)
 
 
 @dataclass(frozen=True)
@@ -54,6 +56,7 @@ class SSMLParser:
         """
         Parse annotated text into a sequence of ExpressiveSegments.
         """
+
         # First standardize SSML <break time="..."/> into bracket format
         def _ssml_break_repl(m: re.Match[str]) -> str:
             val = m.group(1)
@@ -75,7 +78,9 @@ class SSMLParser:
             pause_unit = match.group(3)
 
             if chunk:
-                profile = EMOTION_ACOUSTIC_PROFILES.get(current_emotion, EMOTION_ACOUSTIC_PROFILES["neutral"])
+                profile = EMOTION_ACOUSTIC_PROFILES.get(
+                    current_emotion, EMOTION_ACOUSTIC_PROFILES["neutral"]
+                )
                 segments.append(
                     ExpressiveSegment(
                         text=chunk,
@@ -109,7 +114,9 @@ class SSMLParser:
         # Trailing text
         tail = text[last_pos:].strip()
         if tail:
-            profile = EMOTION_ACOUSTIC_PROFILES.get(current_emotion, EMOTION_ACOUSTIC_PROFILES["neutral"])
+            profile = EMOTION_ACOUSTIC_PROFILES.get(
+                current_emotion, EMOTION_ACOUSTIC_PROFILES["neutral"]
+            )
             segments.append(
                 ExpressiveSegment(
                     text=tail,

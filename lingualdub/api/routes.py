@@ -63,14 +63,18 @@ class SpeechAPIHandler:
             except KeyError:
                 logger.debug("Voice %r not found in presets; using default consent", voice_id)
 
-        consent_basis = voice_pack.metadata.consent_basis if voice_pack else "api_explicit_consent_granted"
+        consent_basis = (
+            voice_pack.metadata.consent_basis if voice_pack else "api_explicit_consent_granted"
+        )
 
         # Generate audio using the requested engine
         if model in ("sunbird", "sunbird_tts"):
             from lingualdub.components.tts.sunbird import SunbirdTTSComponent
 
-            comp = SunbirdTTSComponent(language=language, voice_id=voice_id, api_key=api_key)
-            res = comp.run(
+            sunbird_comp = SunbirdTTSComponent(
+                language=language, voice_id=voice_id, api_key=api_key
+            )
+            res = sunbird_comp.run(
                 Result(
                     segments=[Segment(start=0.0, end=2.0, text=text, language=language)],
                     source_language=language,
@@ -79,6 +83,7 @@ class SpeechAPIHandler:
             )
             if res.artifacts:
                 from pathlib import Path
+
                 return Path(res.artifacts[0]).read_bytes(), "audio/wav"
 
         elif model == "dummy":
@@ -94,12 +99,11 @@ class SpeechAPIHandler:
                 tmp_path.unlink(missing_ok=True)
             return audio_bytes, "audio/wav"
 
-
         elif model in ("sherpa_mms", "sherpa_mms_tts"):
             from lingualdub.components.tts.sherpa_mms import SherpaMMSTTSComponent
 
-            comp = SherpaMMSTTSComponent(language=language)
-            res = comp.run(
+            sherpa_comp = SherpaMMSTTSComponent(language=language)
+            res = sherpa_comp.run(
                 Result(
                     segments=[Segment(start=0.0, end=2.0, text=text, language=language)],
                     source_language=language,
@@ -108,6 +112,7 @@ class SpeechAPIHandler:
             )
             if res.artifacts:
                 from pathlib import Path
+
                 return Path(res.artifacts[0]).read_bytes(), "audio/wav"
 
         elif model in ("omnivoice", "omnivoice_gguf"):
@@ -117,8 +122,8 @@ class SpeechAPIHandler:
             if voice_pack:
                 ref_path = voice_pack.extract_reference_audio()
 
-            comp = OmniVoiceTTSComponent(ref_audio_path=ref_path, language=language)
-            res = comp.run(
+            omnivoice_comp = OmniVoiceTTSComponent(ref_audio_path=ref_path, language=language)
+            res = omnivoice_comp.run(
                 Result(
                     segments=[Segment(start=0.0, end=2.0, text=text, language=language)],
                     source_language=language,
@@ -127,12 +132,14 @@ class SpeechAPIHandler:
             )
             if res.artifacts:
                 from pathlib import Path
+
                 return Path(res.artifacts[0]).read_bytes(), "audio/wav"
 
         # Fallback dummy
         dummy = DummyTTSComponent()
         fallback_res = dummy.degrade(Result(segments=[], source_language=language))
         from pathlib import Path
+
         return Path(fallback_res.artifacts[0]).read_bytes(), "audio/wav"
 
     def handle_list_voices(self, language: str | None = None) -> list[dict[str, Any]]:
@@ -240,6 +247,7 @@ class SpeechAPIHandler:
         if api_key:
             try:
                 from lingualdub.engines.sunbird.client import SunbirdClient
+
                 client = SunbirdClient(api_key=api_key)
                 sunbird_res = client.translate(text=text, source_language=src, target_language=tgt)
                 if isinstance(sunbird_res, dict) and "translated_text" in sunbird_res:
@@ -257,7 +265,10 @@ class SpeechAPIHandler:
         try:
             comp = QuantizedNLLBTranslationComponent(source_language=src, target_language=tgt)
             res = comp.run(
-                Result(segments=[Segment(start=0.0, end=1.0, text=text, language=src)], source_language=src)
+                Result(
+                    segments=[Segment(start=0.0, end=1.0, text=text, language=src)],
+                    source_language=src,
+                )
             )
             if res.segments and res.segments[0].text:
                 return {
@@ -272,6 +283,7 @@ class SpeechAPIHandler:
 
         # 3. Authentic African Lexicon & Phrasebook Translation
         from lingualdub.languages.lexicon import translate_with_lexicon
+
         translated_text = translate_with_lexicon(text, source_language=src, target_language=tgt)
 
         return {
@@ -281,8 +293,6 @@ class SpeechAPIHandler:
             "translated_text": translated_text,
             "engine": "african_lexicon",
         }
-
-
 
     def handle_studio_master(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Master audio track to broadcast target loudness with soft saturation."""
@@ -339,4 +349,3 @@ class SpeechAPIHandler:
             "model_id": model_id,
             "deleted": deleted,
         }
-

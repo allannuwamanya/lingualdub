@@ -89,6 +89,7 @@ def test_download_model_full(tmp_path: Path):
     )
 
     with patch("lingualdub.models.downloader.download_model_file") as mock_df:
+
         def fake_file(repo_id, file_spec, target_dir, **kwargs):
             dest = target_dir / file_spec.filename
             dest.write_text("ok")
@@ -117,7 +118,9 @@ def test_download_model_required_failure(tmp_path: Path):
     )
 
     with (
-        patch("lingualdub.models.downloader.download_model_file", side_effect=RuntimeError("HTTP 404")),
+        patch(
+            "lingualdub.models.downloader.download_model_file", side_effect=RuntimeError("HTTP 404")
+        ),
         pytest.raises(DownloadError, match="Failed to download required file"),
     ):
         download_model(descriptor, tmp_path)

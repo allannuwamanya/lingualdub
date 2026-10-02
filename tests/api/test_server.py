@@ -129,6 +129,7 @@ def test_api_server_endpoints():
             method="POST",
         )
         import pytest
+
         with pytest.raises(urllib.error.HTTPError) as exc_info:
             urllib.request.urlopen(req, timeout=5)
         assert exc_info.value.code == 400
@@ -191,5 +192,3 @@ def test_server_bearer_token_auth(monkeypatch):
     finally:
         server.shutdown()
         server.server_close()
-
-

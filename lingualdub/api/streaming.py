@@ -49,7 +49,7 @@ def stream_speech_chunks(
     from pathlib import Path
 
     for idx, part in enumerate(parts):
-        is_final = (idx == total - 1)
+        is_final = idx == total - 1
         duration = max(0.5, len(part) * 0.08)
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:

@@ -182,7 +182,6 @@ MODEL_CATALOG: dict[str, ModelDescriptor] = {
         description="Offline Hausa speech synthesizer for West and Central Africa.",
         tags=["tts", "hausa", "vits", "onnx", "quantized"],
     ),
-
     # 2. CTranslate2 NLLB-200 Distilled 600M INT8
     "ct2_nllb": ModelDescriptor(
         model_id="ct2_nllb",
@@ -190,8 +189,22 @@ MODEL_CATALOG: dict[str, ModelDescriptor] = {
         family="ct2_nllb",
         task="translation",
         languages=[
-            "lug", "swa", "nyn", "yor", "ibo", "hau", "zul", "xho", "kin",
-            "som", "amh", "lin", "eng", "fra", "ara", "pt"
+            "lug",
+            "swa",
+            "nyn",
+            "yor",
+            "ibo",
+            "hau",
+            "zul",
+            "xho",
+            "kin",
+            "som",
+            "amh",
+            "lin",
+            "eng",
+            "fra",
+            "ara",
+            "pt",
         ],
         repo_id="JustFrederik/nllb-200-distilled-600M-ct2-int8",
         files=[
@@ -205,7 +218,6 @@ MODEL_CATALOG: dict[str, ModelDescriptor] = {
         description="INT8-quantized NLLB translation covering 50+ African languages at ~50ms/sentence.",
         tags=["translation", "nllb", "ctranslate2", "int8", "african-languages"],
     ),
-
     # 3. Faster-Whisper Quantized ASR
     "whisper_tiny": ModelDescriptor(
         model_id="whisper_tiny",
@@ -245,7 +257,6 @@ MODEL_CATALOG: dict[str, ModelDescriptor] = {
         description="Accurate multilingual ASR model with improved speech recognition for African accents.",
         tags=["asr", "whisper", "ctranslate2", "speech-to-text", "int8"],
     ),
-
     # 4. OmniVoice Multilingual GGUF Zero-Shot Voice Cloning
     "omnivoice_gguf_q4": ModelDescriptor(
         model_id="omnivoice_gguf_q4",

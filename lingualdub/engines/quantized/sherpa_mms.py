@@ -65,6 +65,7 @@ class SherpaMMSEngine(BaseEngine):
         """Check if sherpa_onnx runtime is installed."""
         try:
             import sherpa_onnx  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -137,8 +138,22 @@ class SherpaMMSEngine(BaseEngine):
             engine_type=self.engine_type,
             supported_tasks=["tts"],
             supported_languages=[
-                "lug", "nyn", "swa", "eng", "ach", "teo", "lgg",
-                "yor", "ibo", "hau", "zul", "xho", "kin", "som", "amh", "lin"
+                "lug",
+                "nyn",
+                "swa",
+                "eng",
+                "ach",
+                "teo",
+                "lgg",
+                "yor",
+                "ibo",
+                "hau",
+                "zul",
+                "xho",
+                "kin",
+                "som",
+                "amh",
+                "lin",
             ],
             memory_footprint_mb=35,
             requires_gpu=False,

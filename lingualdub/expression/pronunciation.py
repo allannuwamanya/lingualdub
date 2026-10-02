@@ -128,6 +128,7 @@ class PronunciationDictionary:
         """
         Mark penultimate lengthening and geminate consonant tension for Bantu TTS.
         """
+
         # In Luganda, geminate consonants (bb, dd, kk, etc.) indicate a glottal hold / syllable weight
         def _highlight_geminates(match: re.Match[str]) -> str:
             prefix = match.group(1)

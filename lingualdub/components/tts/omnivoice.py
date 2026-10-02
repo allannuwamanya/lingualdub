@@ -22,9 +22,29 @@ from lingualdub.utils.consent import ensure_consent
 logger = logging.getLogger(__name__)
 
 OMNIVOICE_SUPPORTED_LANGUAGES = [
-    "lug", "nyn", "swa", "eng", "ach", "teo", "lgg",
-    "yor", "ibo", "hau", "zul", "xho", "kin", "som", "amh", "lin",
-    "sna", "tsn", "sot", "nya", "wol", "aka", "ewe",
+    "lug",
+    "nyn",
+    "swa",
+    "eng",
+    "ach",
+    "teo",
+    "lgg",
+    "yor",
+    "ibo",
+    "hau",
+    "zul",
+    "xho",
+    "kin",
+    "som",
+    "amh",
+    "lin",
+    "sna",
+    "tsn",
+    "sot",
+    "nya",
+    "wol",
+    "aka",
+    "ewe",
 ]
 
 
@@ -125,7 +145,11 @@ class OmniVoiceTTSComponent(TTSComponent):
             audio_file = self.output_dir / f"omnivoice_{self.language}_seg_{idx}_{self.version}.wav"
 
             try:
-                speed = min(1.35, max(0.7, 1.0 / ratio)) if strategy == FittingStrategy.COMPRESS else 1.0
+                speed = (
+                    min(1.35, max(0.7, 1.0 / ratio))
+                    if strategy == FittingStrategy.COMPRESS
+                    else 1.0
+                )
                 self.engine.synthesize(
                     text=text,
                     output_wav=audio_file,

@@ -132,7 +132,11 @@ class ModelManager:
                 continue
             if task and descriptor.task != task:
                 continue
-            if language and language not in descriptor.languages and "mul" not in descriptor.languages:
+            if (
+                language
+                and language not in descriptor.languages
+                and "mul" not in descriptor.languages
+            ):
                 continue
             results.append(self.get_model_status(model_id))
         return results

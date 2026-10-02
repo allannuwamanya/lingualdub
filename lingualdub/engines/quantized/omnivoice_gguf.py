@@ -16,7 +16,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from lingualdub.engines.base import BaseEngine, EngineInfo, EngineStatus, EngineType
 from lingualdub.engines.probe import HardwareCapabilities, detect_capabilities
@@ -53,7 +53,9 @@ class OmniVoiceGGUFEngine(BaseEngine):
         self.caps = capabilities or detect_capabilities()
         self.quant = quant_override or self.caps.recommended_gguf_quant
         self.device = device or ("cuda" if self.caps.accelerator == "cuda" else "cpu")
-        self.model_dir = Path(model_dir) if model_dir else Path.home() / ".cache" / "lingualdub" / "omnivoice"
+        self.model_dir = (
+            Path(model_dir) if model_dir else Path.home() / ".cache" / "lingualdub" / "omnivoice"
+        )
         self.binary_path = Path(binary_path) if binary_path else self._find_binary()
         self._runner: Any = None
 
@@ -82,6 +84,7 @@ class OmniVoiceGGUFEngine(BaseEngine):
             return True
         try:
             import omnivoice  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -129,11 +132,16 @@ class OmniVoiceGGUFEngine(BaseEngine):
         if self.binary_path and self.binary_path.exists():
             cmd = [
                 str(self.binary_path),
-                "--text", text,
-                "--output", str(dest_path),
-                "--language", language,
-                "--speed", str(speed),
-                "--quant", self.quant,
+                "--text",
+                text,
+                "--output",
+                str(dest_path),
+                "--language",
+                language,
+                "--speed",
+                str(speed),
+                "--quant",
+                self.quant,
             ]
             if ref_audio_path:
                 cmd.extend(["--reference-audio", str(ref_audio_path)])
@@ -175,11 +183,31 @@ class OmniVoiceGGUFEngine(BaseEngine):
             engine_type=self.engine_type,
             supported_tasks=["tts", "voice_cloning"],
             supported_languages=[
-                "lug", "nyn", "swa", "eng", "ach", "teo", "lgg",
-                "yor", "ibo", "hau", "zul", "xho", "kin", "som", "amh", "lin",
-                "sna", "tsn", "sot", "nya", "wol", "aka", "ewe"
+                "lug",
+                "nyn",
+                "swa",
+                "eng",
+                "ach",
+                "teo",
+                "lgg",
+                "yor",
+                "ibo",
+                "hau",
+                "zul",
+                "xho",
+                "kin",
+                "som",
+                "amh",
+                "lin",
+                "sna",
+                "tsn",
+                "sot",
+                "nya",
+                "wol",
+                "aka",
+                "ewe",
             ],
-            memory_footprint_mb=tier_info["memory_mb"],
+            memory_footprint_mb=cast(int, tier_info["memory_mb"]),
             requires_gpu=False,
             requires_network=False,
             metadata={

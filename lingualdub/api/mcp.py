@@ -46,9 +46,18 @@ AVAILABLE_TOOLS = [
             "type": "object",
             "properties": {
                 "text": {"type": "string", "description": "Text to synthesize."},
-                "language": {"type": "string", "description": "Language code (e.g. 'lug', 'nyn', 'swa')."},
-                "voice": {"type": "string", "description": "Voice ID or preset name (e.g. 'kigozi_lug', 'namubiru_lug', 'amina_swa')."},
-                "model": {"type": "string", "description": "TTS model backend: 'sunbird', 'sherpa_mms', 'omnivoice', or 'dummy'."},
+                "language": {
+                    "type": "string",
+                    "description": "Language code (e.g. 'lug', 'nyn', 'swa').",
+                },
+                "voice": {
+                    "type": "string",
+                    "description": "Voice ID or preset name (e.g. 'kigozi_lug', 'namubiru_lug', 'amina_swa').",
+                },
+                "model": {
+                    "type": "string",
+                    "description": "TTS model backend: 'sunbird', 'sherpa_mms', 'omnivoice', or 'dummy'.",
+                },
                 "speed": {"type": "number", "description": "Speech rate multiplier (default 1.0)."},
             },
             "required": ["text"],
@@ -61,8 +70,14 @@ AVAILABLE_TOOLS = [
             "type": "object",
             "properties": {
                 "text": {"type": "string", "description": "Text to translate."},
-                "source_language": {"type": "string", "description": "Source language code (e.g. 'lug', 'eng')."},
-                "target_language": {"type": "string", "description": "Target language code (e.g. 'eng', 'lug')."},
+                "source_language": {
+                    "type": "string",
+                    "description": "Source language code (e.g. 'lug', 'eng').",
+                },
+                "target_language": {
+                    "type": "string",
+                    "description": "Target language code (e.g. 'eng', 'lug').",
+                },
             },
             "required": ["text", "source_language", "target_language"],
         },
@@ -149,6 +164,7 @@ class MCPServer:
             }
             audio_bytes, content_type = self.speech_handler.handle_synthesize_speech(payload)
             import base64
+
             b64_audio = base64.b64encode(audio_bytes).decode("ascii")
             return [
                 {

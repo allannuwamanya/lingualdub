@@ -256,7 +256,9 @@ def _generate_synthetic_reference_wav(freq_hz: float, duration_sec: float = 3.0)
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
             temp_path = Path(tf.name)
         try:
-            write_dummy_wav(temp_path, duration_sec=duration_sec, freq_hz=freq_hz, sample_rate=16000)
+            write_dummy_wav(
+                temp_path, duration_sec=duration_sec, freq_hz=freq_hz, sample_rate=16000
+            )
             return temp_path.read_bytes()
         finally:
             temp_path.unlink(missing_ok=True)
@@ -289,7 +291,9 @@ def get_preset_voice(voice_id: str) -> VoicePack:
     Construct a VoicePack for a named preset.
     """
     if voice_id not in AFRICAN_VOICE_PRESETS:
-        raise KeyError(f"Preset voice {voice_id!r} not found. Available: {list(AFRICAN_VOICE_PRESETS.keys())}")
+        raise KeyError(
+            f"Preset voice {voice_id!r} not found. Available: {list(AFRICAN_VOICE_PRESETS.keys())}"
+        )
 
     data = AFRICAN_VOICE_PRESETS[voice_id]
     audio_bytes = _generate_synthetic_reference_wav(freq_hz=data["pitch_freq"])

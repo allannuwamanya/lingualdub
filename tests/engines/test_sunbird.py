@@ -132,7 +132,9 @@ def test_sunbird_translate_http_error():
 
     with patch(
         "urllib.request.urlopen",
-        side_effect=urllib.error.HTTPError("https://api.sunbird.ai", 429, "Too Many Requests", {}, fp),
+        side_effect=urllib.error.HTTPError(
+            "https://api.sunbird.ai", 429, "Too Many Requests", {}, fp
+        ),
     ):
         with pytest.raises(SunbirdAPIError) as exc_info:
             client.translate("Test", "lug", "eng")

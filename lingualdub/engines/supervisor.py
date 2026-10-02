@@ -21,7 +21,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from lingualdub.exceptions import StageExecutionError
 
@@ -107,7 +107,9 @@ class SubprocessSupervisor:
                 bufsize=1,
             )
         except Exception as exc:
-            raise SupervisorError(f"Failed to start supervisor worker command {self.cmd!r}: {exc}") from exc
+            raise SupervisorError(
+                f"Failed to start supervisor worker command {self.cmd!r}: {exc}"
+            ) from exc
 
         self._reader_thread = threading.Thread(
             target=self._reader_loop,
@@ -190,7 +192,9 @@ class SubprocessSupervisor:
                     )
                     self._spawn_process()
                 else:
-                    raise WorkerCrashedError("Subprocess worker is dead and cannot accept requests.")
+                    raise WorkerCrashedError(
+                        "Subprocess worker is dead and cannot accept requests."
+                    )
 
             req_id = str(uuid.uuid4())
             event = threading.Event()
@@ -227,7 +231,7 @@ class SubprocessSupervisor:
             err_msg = response_container.get("error", "Unknown worker error")
             raise SupervisorError(f"Worker action {action!r} failed: {err_msg}")
 
-        return response_container.get("result", {})
+        return cast(dict[str, Any], response_container.get("result", {}))
 
     def ping(self, timeout: float = 5.0) -> bool:
         """Send a lightweight heartbeat ping to test worker liveness."""

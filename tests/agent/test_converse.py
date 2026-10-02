@@ -69,7 +69,6 @@ def test_agent_default_responder():
     assert "Ntegedde bulungi" in resp_gen
 
 
-
 def test_agent_respond_stream_full():
     agent = ConversationalVoiceAgent(voice_id="kigozi_lug", language="lug")
     chunks = list(agent.respond_stream(user_text="Oli otya?"))
@@ -87,7 +86,9 @@ def test_agent_respond_stream_interruption():
     agent = ConversationalVoiceAgent(voice_id="kigozi_lug", language="lug")
 
     # Custom multi-sentence reply to ensure multiple chunks
-    agent.llm_responder = lambda text, hist: "Sentensi ya kwanza. Sentensi ya pili. Sentensi ya tatu."
+    agent.llm_responder = lambda text, hist: (
+        "Sentensi ya kwanza. Sentensi ya pili. Sentensi ya tatu."
+    )
 
     yielded_chunks = []
     stream = agent.respond_stream(user_text="Habari")

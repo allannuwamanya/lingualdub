@@ -19,7 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from lingualdub.exceptions import StageExecutionError
 
@@ -32,7 +32,9 @@ DEFAULT_TIMEOUT_SECONDS = 60
 class SunbirdAPIError(StageExecutionError):
     """Raised when Sunbird AI API returns an error response."""
 
-    def __init__(self, message: str, status_code: int | None = None, response_body: str | None = None) -> None:
+    def __init__(
+        self, message: str, status_code: int | None = None, response_body: str | None = None
+    ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.response_body = response_body
@@ -61,7 +63,7 @@ class SunbirdClient:
         return bool(self.api_key and self.api_key.strip())
 
     def _get_headers(self, content_type: str = "application/json") -> dict[str, str]:
-        if not self.is_configured:
+        if not self.is_configured or not self.api_key:
             raise ValueError(  # justified: missing authentication credentials for third-party API
                 "Sunbird API key is missing. Set SUNBIRD_API_KEY environment variable or pass api_key."
             )
@@ -111,7 +113,7 @@ class SunbirdClient:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                return data
+                return cast(dict[str, Any], data)
         except urllib.error.HTTPError as exc:
             # Fallback to legacy endpoint /tasks/stt if 404
             if exc.code == 404:
@@ -134,7 +136,7 @@ class SunbirdClient:
         req = urllib.request.Request(legacy_url, data=audio_data, headers=headers, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                return cast(dict[str, Any], json.loads(resp.read().decode("utf-8")))
         except Exception as exc:
             raise SunbirdAPIError(f"Sunbird legacy STT failed: {exc}") from exc
 
@@ -168,7 +170,7 @@ class SunbirdClient:
 
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                return cast(dict[str, Any], json.loads(resp.read().decode("utf-8")))
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
                 return self._translate_legacy(text, source_language, target_language)
@@ -208,7 +210,7 @@ class SunbirdClient:
         req = urllib.request.Request(legacy_url, data=data_bytes, headers=headers, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                return cast(dict[str, Any], json.loads(resp.read().decode("utf-8")))
         except Exception as exc:
             raise SunbirdAPIError(f"Sunbird legacy NMT failed: {exc}") from exc
 
@@ -246,7 +248,7 @@ class SunbirdClient:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 audio_bytes = resp.read()
-                return audio_bytes
+                return cast(bytes, audio_bytes)
         except urllib.error.HTTPError as exc:
             err_body = exc.read().decode("utf-8", errors="replace")
             raise SunbirdAPIError(

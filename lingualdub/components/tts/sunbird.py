@@ -132,7 +132,9 @@ class SunbirdTTSComponent(TTSComponent):
                     language=seg.language or self.language,
                     voice_id=self.voice_id,
                 )
-                audio_file = self.output_dir / f"sunbird_{self.language}_seg_{idx}_{self.version}.wav"
+                audio_file = (
+                    self.output_dir / f"sunbird_{self.language}_seg_{idx}_{self.version}.wav"
+                )
                 with open(audio_file, "wb") as f:
                     f.write(audio_bytes)
 
@@ -151,7 +153,9 @@ class SunbirdTTSComponent(TTSComponent):
                     )
                 )
             except Exception as exc:
-                logger.warning("Sunbird TTS synthesis failed on segment #%d (%r): %s", idx, text, exc)
+                logger.warning(
+                    "Sunbird TTS synthesis failed on segment #%d (%r): %s", idx, text, exc
+                )
                 warnings.append(f"Sunbird TTS synthesis failed on segment #{idx}: {exc}")
 
         return Result(

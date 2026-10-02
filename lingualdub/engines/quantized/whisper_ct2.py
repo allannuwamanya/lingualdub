@@ -54,6 +54,7 @@ class FasterWhisperEngine(BaseEngine):
         """Check if faster_whisper runtime is installed."""
         try:
             import faster_whisper  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -120,13 +121,15 @@ class FasterWhisperEngine(BaseEngine):
                     {"word": w.word, "start": w.start, "end": w.end, "probability": w.probability}
                     for w in s.words
                 ]
-            segments.append({
-                "start": float(s.start),
-                "end": float(s.end),
-                "text": s.text.strip(),
-                "confidence": getattr(s, "avg_logprob", 0.9),
-                "words": words,
-            })
+            segments.append(
+                {
+                    "start": float(s.start),
+                    "end": float(s.end),
+                    "text": s.text.strip(),
+                    "confidence": getattr(s, "avg_logprob", 0.9),
+                    "words": words,
+                }
+            )
 
         info_dict = {
             "language": getattr(info, "language", language or "und"),

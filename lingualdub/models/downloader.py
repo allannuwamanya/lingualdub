@@ -102,7 +102,9 @@ def download_model_file(
     """
     dest_file = target_dir / file_spec.filename
     if dest_file.is_file() and dest_file.stat().st_size > 0:
-        logger.debug("File %s already exists in %s, skipping download", file_spec.filename, target_dir)
+        logger.debug(
+            "File %s already exists in %s, skipping download", file_spec.filename, target_dir
+        )
         return dest_file
 
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -116,7 +118,6 @@ def download_model_file(
             repo_id=repo_id,
             filename=file_spec.filename,
             local_dir=str(target_dir),
-            local_dir_use_symlinks=False,
         )
         return Path(cached_path)
     except Exception as exc:

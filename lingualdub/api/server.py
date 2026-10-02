@@ -30,7 +30,9 @@ class RateLimiter:
     def __init__(self, max_requests: int = 120, window_sec: float = 60.0) -> None:
         self.max_requests = max_requests
         self.window_sec = window_sec
-        self._history: dict[str, collections.deque[float]] = collections.defaultdict(collections.deque)
+        self._history: dict[str, collections.deque[float]] = collections.defaultdict(
+            collections.deque
+        )
         self._lock = threading.Lock()
 
     def is_allowed(self, client_ip: str) -> bool:
@@ -140,6 +142,7 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
 
         # Serve compiled modern web application (website/dist)
         from pathlib import Path
+
         dist_dir = Path(__file__).resolve().parent.parent.parent / "website" / "dist"
         if dist_dir.is_dir():
             clean_path = self.path.split("?")[0].lstrip("/")
@@ -191,6 +194,7 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/v1/voices/clone":
             try:
                 import base64
+
                 if "audio_base64" in payload:
                     payload["audio_bytes"] = base64.b64decode(payload["audio_base64"])
                 res = self.handler.handle_clone_voice(payload)
@@ -245,4 +249,3 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
 def create_server(host: str = "127.0.0.1", port: int = 8000) -> HTTPServer:
     """Create a configured LingualDub HTTPServer instance."""
     return HTTPServer((host, port), LingualDubRequestHandler)
-

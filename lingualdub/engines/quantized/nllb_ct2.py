@@ -61,6 +61,7 @@ class CTranslate2NLLBEngine(BaseEngine):
         """Check if ctranslate2 is installed and model path exists or is loadable."""
         try:
             import ctranslate2  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -92,9 +93,7 @@ class CTranslate2NLLBEngine(BaseEngine):
                 inter_threads=self.inter_threads,
                 intra_threads=self.intra_threads,
             )
-            self._tokenizer = AutoTokenizer.from_pretrained(
-                "facebook/nllb-200-distilled-600M"
-            )
+            self._tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
             self._status = EngineStatus.READY
 
     def shutdown(self) -> None:
@@ -126,8 +125,7 @@ class CTranslate2NLLBEngine(BaseEngine):
 
         # Tokenize subwords
         tokenized = [
-            self._tokenizer.convert_ids_to_tokens(self._tokenizer.encode(t))
-            for t in texts
+            self._tokenizer.convert_ids_to_tokens(self._tokenizer.encode(t)) for t in texts
         ]
 
         target_prefix = [[tgt_code]] * len(tokenized)
