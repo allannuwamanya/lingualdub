@@ -9,8 +9,12 @@ Uses Python standard library http.server, requiring zero additional runtime depe
 
 from __future__ import annotations
 
+import collections
 import json
 import logging
+import os
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
@@ -20,12 +24,55 @@ from lingualdub.api.routes import SpeechAPIHandler
 logger = logging.getLogger(__name__)
 
 
+class RateLimiter:
+    """Thread-safe sliding-window rate limiter per client IP."""
+
+    def __init__(self, max_requests: int = 120, window_sec: float = 60.0) -> None:
+        self.max_requests = max_requests
+        self.window_sec = window_sec
+        self._history: dict[str, collections.deque[float]] = collections.defaultdict(collections.deque)
+        self._lock = threading.Lock()
+
+    def is_allowed(self, client_ip: str) -> bool:
+        if self.max_requests <= 0:
+            return True
+        now = time.time()
+        cutoff = now - self.window_sec
+        with self._lock:
+            q = self._history[client_ip]
+            while q and q[0] < cutoff:
+                q.popleft()
+            if len(q) >= self.max_requests:
+                return False
+            q.append(now)
+            return True
+
+
 class LingualDubRequestHandler(BaseHTTPRequestHandler):
     """
     HTTP Request Handler serving OpenAI / ElevenLabs compatible voice endpoints.
     """
 
     handler: SpeechAPIHandler = SpeechAPIHandler()
+    rate_limiter: RateLimiter = RateLimiter(
+        max_requests=int(os.environ.get("LINGUALDUB_RATE_LIMIT", "120")),
+        window_sec=60.0,
+    )
+
+    def _get_client_ip(self) -> str:
+        forwarded = self.headers.get("X-Forwarded-For")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return self.client_address[0] if self.client_address else "127.0.0.1"
+
+    def _is_authenticated(self) -> bool:
+        expected = os.environ.get("LINGUALDUB_API_KEY") or os.environ.get("LINGUALDUB_BEARER_TOKEN")
+        if not expected:
+            return True
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return auth_header[7:].strip() == expected
+        return False
 
     def _send_cors_headers(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -50,6 +97,7 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         if not file_path.is_file():
             return False
         import mimetypes
+
         mime_type, _ = mimetypes.guess_type(str(file_path))
         mime_type = mime_type or "application/octet-stream"
         data = file_path.read_bytes()
@@ -65,6 +113,15 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/health":
             self._send_json(200, {"status": "ok", "platform": "lingualdub", "version": "0.1.0"})
             return
+
+        # Rate limit and auth protection for /v1/ endpoints
+        if self.path.startswith("/v1/"):
+            if not self.rate_limiter.is_allowed(self._get_client_ip()):
+                self._send_json(429, {"error": "Rate limit exceeded. Please wait before retrying."})
+                return
+            if not self._is_authenticated():
+                self._send_json(401, {"error": "Unauthorized: Invalid or missing Bearer token"})
+                return
 
         if self.path == "/v1/system/probe":
             probe = self.handler.handle_system_probe()
@@ -107,6 +164,15 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             self._send_json(400, {"error": "Invalid JSON body"})
             return
+
+        # Rate limit and auth protection for /v1/ endpoints
+        if self.path.startswith("/v1/"):
+            if not self.rate_limiter.is_allowed(self._get_client_ip()):
+                self._send_json(429, {"error": "Rate limit exceeded. Please wait before retrying."})
+                return
+            if not self._is_authenticated():
+                self._send_json(401, {"error": "Unauthorized: Invalid or missing Bearer token"})
+                return
 
         if self.path == "/v1/audio/speech":
             try:

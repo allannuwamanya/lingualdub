@@ -137,3 +137,59 @@ def test_api_server_endpoints():
         server.shutdown()
         server.server_close()
 
+
+def test_rate_limiter_unit():
+    from lingualdub.api.server import RateLimiter
+
+    limiter = RateLimiter(max_requests=3, window_sec=1.0)
+    ip = "192.168.1.100"
+
+    assert limiter.is_allowed(ip) is True
+    assert limiter.is_allowed(ip) is True
+    assert limiter.is_allowed(ip) is True
+    assert limiter.is_allowed(ip) is False  # 4th request rejected
+
+    # Different IP is unaffected
+    assert limiter.is_allowed("192.168.1.101") is True
+
+
+def test_server_bearer_token_auth(monkeypatch):
+    import urllib.error
+
+    import pytest
+
+    monkeypatch.setenv("LINGUALDUB_API_KEY", "secret-token-123")
+
+    server = create_server(host="127.0.0.1", port=0)
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{port}"
+
+    try:
+        # /health is public
+        req = urllib.request.Request(f"{base_url}/health")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+
+        # /v1/voices without auth header -> 401
+        req = urllib.request.Request(f"{base_url}/v1/voices")
+        with pytest.raises(urllib.error.HTTPError) as err:
+            urllib.request.urlopen(req, timeout=5)
+        assert err.value.code == 401
+
+        # /v1/voices with correct Bearer header -> 200
+        req = urllib.request.Request(
+            f"{base_url}/v1/voices",
+            headers={"Authorization": "Bearer secret-token-123"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data = json.loads(resp.read().decode())
+            assert "voices" in data
+
+    finally:
+        server.shutdown()
+        server.server_close()
+
+

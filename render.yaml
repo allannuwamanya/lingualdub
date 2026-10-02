@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: lingualdub-api
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: lingualdub-weights
+      mountPath: /app/data/cache
+      sizeGB: 10
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: SUNBIRD_API_KEY
+        sync: false
+      - key: LINGUALDUB_API_KEY
+        generateValue: true
+      - key: LINGUALDUB_RATE_LIMIT
+        value: 120
+      - key: LINGUALDUB_CACHE_DIR
+        value: /app/data/cache

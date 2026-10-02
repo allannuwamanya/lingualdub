@@ -1,0 +1,25 @@
+services:
+  lingualdub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lingualdub-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - SUNBIRD_API_KEY=${SUNBIRD_API_KEY:-}
+      - LINGUALDUB_API_KEY=${LINGUALDUB_API_KEY:-}
+      - LINGUALDUB_RATE_LIMIT=${LINGUALDUB_RATE_LIMIT:-120}
+      - LINGUALDUB_CACHE_DIR=/app/data/cache
+    volumes:
+      - lingualdub_models:/app/data/cache/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  lingualdub_models:
+    name: lingualdub_models_cache
