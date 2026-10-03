@@ -19,6 +19,10 @@ import {
   StopCircle,
   HardDrive,
   Trash2,
+  RotateCcw,
+  Square,
+  Radio,
+  Film,
 } from 'lucide-react';
 
 interface ModelItem {
@@ -104,10 +108,36 @@ const DOMAIN_TEMPLATES = [
   { id: 'chat', label: '🗣️ Conversational', text: 'Hello, how are you? Welcome to our African voice platform.' },
 ];
 
-export default function Studio() {
-  const [activeTab, setActiveTab] = useState<'speech' | 'gallery' | 'cloner' | 'agent' | 'dubbing' | 'mastering' | 'settings'>('speech');
+interface StudioProps {
+  initialTab?: 'speech' | 'gallery' | 'cloner' | 'agent' | 'dubbing' | 'mastering' | 'models' | 'settings';
+}
+
+function formatTime(seconds: number): string {
+  if (isNaN(seconds) || seconds <= 0) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+export default function Studio({ initialTab = 'speech' }: StudioProps) {
+  const [activeTab, setActiveTab] = useState<'speech' | 'gallery' | 'cloner' | 'agent' | 'dubbing' | 'mastering' | 'models' | 'settings'>(initialTab);
   const [hardware, setHardware] = useState<HardwareInfo | null>(null);
   const [voices, setVoices] = useState<VoiceOption[]>(PRESET_VOICES);
+
+  // Audio Dock & Metadata State
+  const [audioTrackName, setAudioTrackName] = useState<string>('Kigozi (Central Luganda)');
+  const [audioTrackLang, setAudioTrackLang] = useState<string>('lug');
+  const [audioTrackEngine, setAudioTrackEngine] = useState<string>('Sunbird AI');
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1.0);
+
+  // Sync with initialTab prop when routes change
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Speech Lab State
   const [selectedLang, setSelectedLang] = useState('lug');
@@ -124,6 +154,16 @@ export default function Studio() {
   const [sunbirdApiKey, setSunbirdApiKey] = useState<string>(() => {
     return typeof window !== 'undefined' ? localStorage.getItem('sunbird_api_key') || '' : '';
   });
+
+  // Listen to key updates from topbar modal
+  useEffect(() => {
+    const handleKeyUpdated = () => {
+      const key = localStorage.getItem('sunbird_api_key') || '';
+      setSunbirdApiKey(key);
+    };
+    window.addEventListener('sunbird_key_updated', handleKeyUpdated);
+    return () => window.removeEventListener('sunbird_key_updated', handleKeyUpdated);
+  }, []);
 
   const speakRealAudio = (text: string, lang: string = 'sw', gender: string = 'Male', playbackSpeed: number = 1.0) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -289,6 +329,10 @@ export default function Studio() {
   const handleSynthesize = async () => {
     if (!speechText.trim()) return;
     setIsSynthesizing(true);
+    const activeVoice = voices.find((v) => v.voice_id === selectedVoice);
+    setAudioTrackName(`${activeVoice?.name || selectedVoice} (${activeVoice?.dialect || selectedLang})`);
+    setAudioTrackLang(selectedLang);
+    setAudioTrackEngine(selectedEngine === 'sunbird' ? 'Sunbird AI (Uganda)' : selectedEngine === 'sherpa_mms' ? 'Sherpa MMS-TTS' : 'OmniVoice GGUF');
     try {
       const res = await fetch('/v1/audio/speech', {
         method: 'POST',
@@ -315,11 +359,9 @@ export default function Studio() {
       }
 
       // Also speak with authentic vocalization through browser speech engine
-      const activeVoice = voices.find((v) => v.voice_id === selectedVoice);
       speakRealAudio(speechText, selectedLang, activeVoice?.gender || 'Male', speed);
     } catch (err) {
       console.warn('Backend audio fallback, speaking via browser speech engine:', err);
-      const activeVoice = voices.find((v) => v.voice_id === selectedVoice);
       speakRealAudio(speechText, selectedLang, activeVoice?.gender || 'Male', speed);
     } finally {
       setIsSynthesizing(false);
@@ -331,6 +373,11 @@ export default function Studio() {
   };
 
   const handleAudition = async (voice: VoiceOption) => {
+    setAudioTrackName(`${voice.name} (${voice.dialect || voice.language})`);
+    setAudioTrackLang(voice.language);
+    setAudioTrackEngine(sunbirdApiKey ? 'Sunbird AI (Uganda)' : 'Sherpa MMS-TTS');
+    setSelectedVoice(voice.voice_id);
+    setSelectedLang(voice.language);
     const sampleText = LANGUAGE_SAMPLES[voice.language] || `Hello, my name is ${voice.name}.`;
     // Immediately play real human pronunciation
     speakRealAudio(sampleText, voice.language, voice.gender, 1.0);
@@ -356,6 +403,47 @@ export default function Studio() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
+  };
+
+  const handleReplay = () => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+  };
+
+  const handleStop = () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    setIsPlaying(false);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    setCurrentTime(time);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+    }
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    if (audioRef.current) {
+      audioRef.current.volume = newVol;
     }
   };
 
@@ -517,70 +605,109 @@ export default function Studio() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* ── Top Status Bar ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-dark-card border border-dark-border rounded-2xl mb-8 shadow-xl">
+    <div className="max-w-[1700px] w-full mx-auto px-4 sm:px-6 py-6 pb-28">
+      {/* ── Studio Workstation Header Bar ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#0d1322]/90 border border-slate-800/80 rounded-2xl mb-6 shadow-xl backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400">
-            <Sparkles className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-emerald-500/20 border border-indigo-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
+            {activeTab === 'speech' && <Mic className="w-5 h-5 text-indigo-400" />}
+            {activeTab === 'gallery' && <Globe className="w-5 h-5 text-emerald-400" />}
+            {activeTab === 'cloner' && <Layers className="w-5 h-5 text-cyan-400" />}
+            {activeTab === 'agent' && <Radio className="w-5 h-5 text-amber-400" />}
+            {activeTab === 'dubbing' && <Film className="w-5 h-5 text-rose-400" />}
+            {activeTab === 'mastering' && <Sliders className="w-5 h-5 text-purple-400" />}
+            {activeTab === 'models' && <HardDrive className="w-5 h-5 text-blue-400" />}
+            {activeTab === 'settings' && <Cpu className="w-5 h-5 text-slate-400" />}
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              LingualDub African Voice Studio
-              <span className="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                ElevenLabs for Africa
+            <div className="flex items-center gap-2">
+              <h1 className="text-base sm:text-lg font-black text-white tracking-tight">
+                {activeTab === 'speech' && 'Speech Lab — African Neural Text-to-Speech'}
+                {activeTab === 'gallery' && 'African Voice Gallery — 22 Curated Personas'}
+                {activeTab === 'cloner' && 'Voice Cloner — Zero-Shot Acoustic Timbre Transfer'}
+                {activeTab === 'agent' && 'Conversational Voice Agent — Real-Time Dialogue'}
+                {activeTab === 'dubbing' && 'Dubbing Room — Speech-to-Speech & AV Synchronization'}
+                {activeTab === 'mastering' && 'Audio Mastering Rack — EBU R128 Loudness Normalizer'}
+                {activeTab === 'models' && 'Neural Model Hub — Offline Weight & Cache Manager'}
+                {activeTab === 'settings' && 'Engine & Hardware Configurations'}
+              </h1>
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 uppercase tracking-widest">
+                Active Room
               </span>
-            </h1>
-            <p className="text-xs text-slate-400">
-              Zero-Shot Voice Cloning • Regional Cloud & Local Quantized Engines • 51+ African Languages
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {activeTab === 'speech' && 'Synthesize natural, prosodic speech across Luganda, Runyankole, Swahili, Acholi, and 18+ African languages.'}
+              {activeTab === 'gallery' && 'Audition and explore native speaker profiles with verified regional accents and tonal inflections.'}
+              {activeTab === 'cloner' && 'Create sovereign .afrivoice voice packs from 5-10 second human speech samples with consent certificates.'}
+              {activeTab === 'agent' && 'Low-latency interactive voice conversation loop with full-duplex barge-in capability.'}
+              {activeTab === 'dubbing' && 'Automated multi-stage audiovisual translation pipeline with duration modeling and lip sync.'}
+              {activeTab === 'mastering' && 'Studio-grade dynamic range compression, dialogue ducking (-12dB), and true-peak limiting.'}
+              {activeTab === 'models' && 'Pull, inspect, and manage offline GGUF, ONNX, and CTranslate2 weights locally.'}
+              {activeTab === 'settings' && 'Configure inference backend endpoints, hardware compute thresholds, and authentication tokens.'}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {hardware ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-surface border border-dark-border rounded-lg text-xs font-mono text-slate-300">
-              <Cpu className="w-3.5 h-3.5 text-blue-400" />
-              <span>{hardware.accelerator.toUpperCase()} ({Math.round(hardware.system_ram_mb / 1024)}GB RAM)</span>
-              <span className="text-emerald-400 font-semibold">• {hardware.recommended_gguf_quant}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-surface border border-dark-border rounded-lg text-xs font-mono text-slate-400">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-500" />
-              <span>Detecting Hardware...</span>
-            </div>
-          )}
-        </div>
+        {/* Quick Domain Script Chips (when in speech or dubbing) */}
+        {(activeTab === 'speech' || activeTab === 'dubbing') && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+              Scripts:
+            </span>
+            {DOMAIN_TEMPLATES.map((tmpl) => (
+              <button
+                key={tmpl.id}
+                onClick={() => setSpeechText(tmpl.text)}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 transition-all shrink-0 shadow-sm"
+              >
+                {tmpl.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ── Navigation Tabs ── */}
-      <div className="flex overflow-x-auto gap-2 border-b border-dark-border pb-3 mb-8">
-        {[
-          { id: 'speech', label: 'Speech Lab', icon: Mic },
-          { id: 'gallery', label: 'African Voices', icon: Globe },
-          { id: 'cloner', label: 'Voice Cloner (.afrivoice)', icon: Layers },
-          { id: 'agent', label: 'Conversational Agent', icon: RadioIcon },
-          { id: 'dubbing', label: 'Dubbing & Translation', icon: FilmIcon },
-          { id: 'mastering', label: 'Mastering Rack', icon: Sliders },
-          { id: 'settings', label: 'Engine Settings', icon: Cpu },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-                isActive
-                  ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-dark-surface border border-transparent'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
+      {/* ── Sub-Room Pills ── */}
+      <div className="flex items-center justify-between overflow-x-auto gap-1.5 border-b border-slate-800/80 pb-3 mb-6 scrollbar-none">
+        <div className="flex items-center gap-1">
+          {[
+            { id: 'speech', label: 'Speech Lab', icon: Mic },
+            { id: 'gallery', label: 'African Voices (22)', icon: Globe },
+            { id: 'cloner', label: 'Voice Cloner (.afrivoice)', icon: Layers },
+            { id: 'agent', label: 'Live Agent', icon: Radio },
+            { id: 'dubbing', label: 'Dubbing Room', icon: Film },
+            { id: 'mastering', label: 'Mastering Rack', icon: Sliders },
+            { id: 'models', label: 'Neural Models', icon: HardDrive },
+            { id: 'settings', label: 'Engine Config', icon: Cpu },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Hardware telemetry chip on right */}
+        {hardware && (
+          <div className="hidden md:flex items-center gap-2 text-[11px] text-slate-400 shrink-0 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>{hardware.device_name}</span>
+            <span>•</span>
+            <span className="text-indigo-400">{hardware.recommended_gguf_quant}</span>
+          </div>
+        )}
       </div>
 
       {/* ── WORKSPACE 1: SPEECH LAB ── */}
@@ -1450,6 +1577,173 @@ export default function Studio() {
         </div>
       )}
 
+      {/* Hidden audio element synced with state */}
+      <audio
+        ref={audioRef}
+        onTimeUpdate={() => {
+          if (audioRef.current) {
+            setCurrentTime(audioRef.current.currentTime);
+          }
+        }}
+        onLoadedMetadata={() => {
+          if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+          }
+        }}
+        onEnded={() => {
+          setIsPlaying(false);
+          setCurrentTime(0);
+        }}
+        onError={() => setIsPlaying(false)}
+        className="hidden"
+      />
+
+      {/* ── Fixed Pro Master Audio Transport Dock ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#070b16]/95 backdrop-blur-2xl border-t border-slate-800/90 shadow-[0_-12px_40px_rgba(0,0,0,0.7)] px-4 py-2.5">
+        <div className="max-w-[1700px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+          
+          {/* Track Info & Animated Equalizer */}
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/30 to-purple-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0 font-bold text-xs shadow-inner">
+                {audioTrackLang === 'lug' || audioTrackLang === 'nyn' || audioTrackLang === 'ach' ? '🇺🇬' :
+                 audioTrackLang === 'swa' ? '🇰🇪' :
+                 audioTrackLang === 'yor' || audioTrackLang === 'ibo' || audioTrackLang === 'hau' ? '🇳🇬' :
+                 audioTrackLang === 'zul' || audioTrackLang === 'xho' ? '🇿🇦' :
+                 audioTrackLang === 'amh' ? '🇪🇹' :
+                 audioTrackLang === 'kin' ? '🇷🇼' : '🌍'}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white tracking-tight">{audioTrackName}</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {audioTrackEngine}
+                  </span>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 flex items-center gap-2 mt-0.5">
+                  <span>{formatTime(currentTime)} / {formatTime(duration || 3.0)}</span>
+                  <span>•</span>
+                  <span>16 kHz Mono</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Waveform Equalizer Animation */}
+            <div className="flex items-end gap-1 h-5 px-2" aria-hidden="true">
+              {[40, 80, 55, 95, 70, 85, 45, 90].map((h, i) => (
+                <div
+                  key={i}
+                  className={`w-1 rounded-full transition-all duration-150 ${
+                    isPlaying ? 'bg-gradient-to-t from-indigo-500 to-emerald-400' : 'bg-slate-700/60'
+                  }`}
+                  style={{
+                    height: isPlaying ? `${Math.max(15, (h * ((i % 3) + 1)) % 100)}%` : '20%',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Transport Controls & Scrubber */}
+          <div className="flex items-center gap-4 w-full md:w-auto justify-center">
+            <button
+              onClick={handleReplay}
+              disabled={!audioUrl}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 transition-colors"
+              title="Replay from start"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={handlePlayPause}
+              disabled={!audioUrl}
+              className="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30 disabled:opacity-40 transition-all scale-100 active:scale-95"
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+            </button>
+
+            <button
+              onClick={handleStop}
+              disabled={!audioUrl && !isPlaying}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 disabled:opacity-30 transition-colors"
+              title="Stop audio"
+            >
+              <Square className="w-4 h-4" />
+            </button>
+
+            {/* Scrubber Range Bar */}
+            <div className="hidden sm:flex items-center gap-2 w-44 lg:w-64">
+              <input
+                type="range"
+                min={0}
+                max={duration || 100}
+                value={currentTime}
+                onChange={handleSeek}
+                disabled={!audioUrl}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-30"
+              />
+            </div>
+          </div>
+
+          {/* Speed & Volume & Download Cluster */}
+          <div className="hidden lg:flex items-center gap-3">
+            {/* Speed Selector */}
+            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-[10px] font-bold">
+              {[0.8, 1.0, 1.25, 1.5].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setSpeed(s);
+                    if (audioRef.current) audioRef.current.playbackRate = s;
+                  }}
+                  className={`px-2 py-1 rounded transition-colors ${
+                    speed === s ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-1.5 text-slate-400 pl-1">
+              <Volume2 className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-16 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                title={`Volume: ${Math.round(volume * 100)}%`}
+              />
+            </div>
+
+            {/* Download WAV button */}
+            {audioUrl ? (
+              <a
+                href={audioUrl}
+                download={`${selectedVoice}_${selectedLang}.wav`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Save WAV</span>
+              </a>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 border border-slate-800 cursor-not-allowed"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Save WAV</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
