@@ -18,6 +18,7 @@ import {
   Sliders,
   ExternalLink,
   ShieldCheck,
+  Compass,
 } from 'lucide-react';
 import GithubIcon from './GithubIcon';
 import TopLoadingBar from './TopLoadingBar';
@@ -30,6 +31,7 @@ const WORKSTATION_MODES = [
   { id: 'agent', label: 'Live Agent', to: '/agent', icon: MessageSquare, end: false },
   { id: 'models', label: 'Model Hub', to: '/models', icon: HardDrive, end: false },
   { id: 'specs', label: 'Framework & Specs', to: '/specs', icon: BookOpen, end: false },
+  { id: 'home', label: 'Landing & Mission', to: '/home', icon: Compass, end: false },
 ];
 
 export default function Layout() {
@@ -53,7 +55,10 @@ export default function Layout() {
   // Check hardware accelerator status
   useEffect(() => {
     fetch('/v1/system/probe')
-      .then((res) => res.json())
+      .then((res) => {
+        const cType = res.headers.get('content-type') || '';
+        return res.ok && cType.includes('json') ? res.json() : Promise.reject();
+      })
       .then((data) => {
         if (data && data.accelerator) {
           setHardwareBadge({
