@@ -24,6 +24,7 @@ import {
   Radio,
   Film,
 } from 'lucide-react';
+import { DEFAULT_SUNBIRD_KEY } from '../components/Layout';
 
 interface ModelItem {
   model_id: string;
@@ -152,7 +153,9 @@ export default function Studio({ initialTab = 'speech' }: StudioProps) {
 
   // Sunbird AI Cloud API Key (Persistent)
   const [sunbirdApiKey, setSunbirdApiKey] = useState<string>(() => {
-    return typeof window !== 'undefined' ? localStorage.getItem('sunbird_api_key') || '' : '';
+    return typeof window !== 'undefined'
+      ? localStorage.getItem('sunbird_api_key') || DEFAULT_SUNBIRD_KEY
+      : DEFAULT_SUNBIRD_KEY;
   });
 
   // Listen to key updates from topbar modal
@@ -396,7 +399,19 @@ export default function Studio({ initialTab = 'speech' }: StudioProps) {
           }),
         });
         const sCType = sRes.headers.get('content-type') || '';
-        if (sRes.ok && (sCType.includes('audio') || sCType.includes('octet-stream'))) {
+        if (sRes.ok && sCType.includes('json')) {
+          const sData = await sRes.json();
+          const directUrl = sData.audio_url || sData.output?.audio_url;
+          if (directUrl) {
+            setAudioUrl(directUrl);
+            if (audioRef.current) {
+              audioRef.current.src = directUrl;
+              audioRef.current.play().catch(() => {});
+              setIsPlaying(true);
+            }
+            playedDirect = true;
+          }
+        } else if (sRes.ok && (sCType.includes('audio') || sCType.includes('octet-stream'))) {
           const blob = await sRes.blob();
           const url = URL.createObjectURL(blob);
           setAudioUrl(url);
@@ -476,7 +491,19 @@ export default function Studio({ initialTab = 'speech' }: StudioProps) {
           }),
         });
         const sCType = sRes.headers.get('content-type') || '';
-        if (sRes.ok && (sCType.includes('audio') || sCType.includes('octet-stream'))) {
+        if (sRes.ok && sCType.includes('json')) {
+          const sData = await sRes.json();
+          const directUrl = sData.audio_url || sData.output?.audio_url;
+          if (directUrl) {
+            setAudioUrl(directUrl);
+            if (audioRef.current) {
+              audioRef.current.src = directUrl;
+              audioRef.current.play().catch(() => {});
+              setIsPlaying(true);
+            }
+            playedDirect = true;
+          }
+        } else if (sRes.ok && (sCType.includes('audio') || sCType.includes('octet-stream'))) {
           const blob = await sRes.blob();
           const url = URL.createObjectURL(blob);
           setAudioUrl(url);
@@ -735,7 +762,7 @@ export default function Studio({ initialTab = 'speech' }: StudioProps) {
         });
         if (sRes.ok) {
           const sData = await sRes.json();
-          translated = sData.translated_text || sData.text || sData.output || '';
+          translated = sData.output?.translated_text || sData.translated_text || sData.text || '';
         }
       } catch (sErr) {
         console.warn('Sunbird direct translation error:', sErr);
