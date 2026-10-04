@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Volume2, Check, Copy, Sparkles, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import CustomSelect from '../CustomSelect';
+import { AFRICAN_LANGUAGE_GROUPS } from '../lab/labConfig';
 
 interface DubbingTargetCardProps {
   targetText: string;
@@ -57,37 +59,12 @@ export default function DubbingTargetCard({
           <label htmlFor="dub-tgt-lang" className="text-base font-bold text-slate-200 block">
             Target African Language
           </label>
-          <select
+          <CustomSelect
             id="dub-tgt-lang"
             value={targetLang}
-            onChange={(e) => onTargetLangChange(e.target.value)}
-            className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 transition-all h-14 cursor-pointer"
-          >
-            <optgroup label="🇺🇬 Uganda">
-              <option value="lug">Luganda (Central)</option>
-              <option value="nyn">Runyankore-Rukiga (Western)</option>
-              <option value="ach">Acholi (Northern)</option>
-            </optgroup>
-            <optgroup label="🇰🇪 East Africa">
-              <option value="swa">Kiswahili (East Africa)</option>
-              <option value="kin">Kinyarwanda (Rwanda)</option>
-              <option value="som">Somali (Horn of Africa)</option>
-            </optgroup>
-            <optgroup label="🇳🇬 West Africa">
-              <option value="yor">Èdè Yorùbá (Nigeria)</option>
-              <option value="ibo">Asụsụ Igbo (Nigeria)</option>
-              <option value="hau">Harshen Hausa (Nigeria / Sahel)</option>
-              <option value="wol">Wolof (Senegal)</option>
-            </optgroup>
-            <optgroup label="🇿🇦 Southern Africa">
-              <option value="zul">isiZulu (South Africa)</option>
-              <option value="xho">isiXhosa (South Africa)</option>
-            </optgroup>
-            <optgroup label="🇪🇹 Horn & Central">
-              <option value="amh">Amharic (Ethiopia)</option>
-              <option value="lin">Lingala (DR Congo)</option>
-            </optgroup>
-          </select>
+            onChange={onTargetLangChange}
+            groups={AFRICAN_LANGUAGE_GROUPS}
+          />
         </div>
 
         {/* Target Text Area */}

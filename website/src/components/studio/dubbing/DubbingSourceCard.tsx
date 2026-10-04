@@ -1,5 +1,15 @@
 import React from 'react';
 import { Languages, ArrowLeftRight, RefreshCw } from 'lucide-react';
+import CustomSelect, { type SelectOption } from '../CustomSelect';
+
+const DUBBING_SOURCE_LANGS: SelectOption[] = [
+  { value: 'eng', label: 'English (Global)', flag: '🇬🇧', description: 'Global Lingua Franca' },
+  { value: 'fra', label: 'French (Francophone Africa)', flag: '🇫🇷', description: 'West & Central Africa' },
+  { value: 'swa', label: 'Kiswahili (East Africa)', flag: '🇰🇪', description: 'Regional Lingua Franca' },
+  { value: 'lug', label: 'Luganda (Central Uganda)', flag: '🇺🇬', description: 'Central Buganda Dialect' },
+  { value: 'por', label: 'Portuguese (Angola / Mozambique)', flag: '🇵🇹', description: 'Lusophone Africa' },
+  { value: 'ara', label: 'Arabic (North Africa)', flag: '🇪🇬', description: 'Maghreb & Nile' },
+];
 
 interface DubbingSourceCardProps {
   sourceText: string;
@@ -43,28 +53,22 @@ export default function DubbingSourceCard({
         {/* Language Selector + Swap Action */}
         <div className="flex items-end gap-3.5">
           <div className="flex-1 space-y-2">
-            <label htmlFor="dub-src-lang" className="text-base font-bold text-slate-200 block">
+            <label className="text-base font-bold text-slate-200 block">
               Source Spoken Language
             </label>
-            <select
-              id="dub-src-lang"
+            <CustomSelect
               value={sourceLang}
-              onChange={(e) => onSourceLangChange(e.target.value)}
-              className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 transition-all h-14 cursor-pointer"
-            >
-              <option value="eng">🇬🇧 English (Global)</option>
-              <option value="fra">🇫🇷 French (Francophone Africa)</option>
-              <option value="swa">🇰🇪 Kiswahili (East Africa)</option>
-              <option value="lug">🇺🇬 Luganda (Central Uganda)</option>
-              <option value="por">🇵🇹 Portuguese (Angola / Mozambique)</option>
-              <option value="ara">🇪🇬 Arabic (North Africa)</option>
-            </select>
+              onChange={onSourceLangChange}
+              options={DUBBING_SOURCE_LANGS}
+              placeholder="Select source language..."
+              ariaLabel="Source Spoken Language"
+            />
           </div>
 
           <button
             type="button"
             onClick={onSwapLanguages}
-            className="w-14 h-14 rounded-2xl bg-[#070b14] hover:bg-white/[0.08] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="w-14 h-14 rounded-2xl bg-[#070b14] hover:bg-white/[0.08] text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-indigo-500 border border-white/[0.08]"
             title="Swap source and target dialogue"
             aria-label="Swap source and target languages"
           >

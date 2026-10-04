@@ -3,6 +3,14 @@ import { Search, X, RotateCcw } from 'lucide-react';
 import { REGION_TABS } from './galleryData';
 import type { RegionFilterId } from './galleryData';
 import type { VoiceOption } from '../../../types/studio';
+import CustomSelect, { type SelectOption } from '../CustomSelect';
+
+const SORT_OPTIONS: SelectOption[] = [
+  { value: 'default', label: 'Featured / Default' },
+  { value: 'name', label: 'Name (A-Z)' },
+  { value: 'lang', label: 'Language (A-Z)' },
+  { value: 'country', label: 'Country' },
+];
 
 interface VoiceGalleryFilterBarProps {
   searchQuery: string;
@@ -95,21 +103,18 @@ export default function VoiceGalleryFilterBar({
         </div>
 
         {/* Sort Dropdown */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <label htmlFor="voice-sort" className="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">
+        <div className="flex items-center gap-2.5 shrink-0 min-w-[210px]">
+          <span className="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">
             Sort:
-          </label>
-          <select
-            id="voice-sort"
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as any)}
-            className="bg-[#070b14] text-slate-100 text-sm sm:text-base font-semibold rounded-2xl px-4 py-2.5 h-14 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer"
-          >
-            <option value="default">Featured / Default</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="lang">Language (A-Z)</option>
-            <option value="country">Country</option>
-          </select>
+          </span>
+          <div className="flex-1">
+            <CustomSelect
+              id="voice-sort"
+              value={sortBy}
+              onChange={(val) => onSortChange(val as any)}
+              options={SORT_OPTIONS}
+            />
+          </div>
         </div>
       </div>
 

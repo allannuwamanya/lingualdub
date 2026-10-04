@@ -1,6 +1,8 @@
 import React from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import type { VoiceOption } from '../../../types/studio';
+import CustomSelect, { type SelectOption } from '../CustomSelect';
+import { AFRICAN_LANGUAGE_GROUPS, INFERENCE_ENGINE_OPTIONS } from './labConfig';
 
 interface SpeechControlsRackProps {
   selectedLang: string;
@@ -42,6 +44,14 @@ export default function SpeechControlsRack({
       ? 'GGUF quantized cloning'
       : 'Native Web Speech API';
 
+  const voiceOptions: SelectOption[] = voices.map((v) => ({
+    value: v.voice_id,
+    label: v.name,
+    flag: v.flag,
+    description: `${v.gender} • ${v.dialect || v.language}`,
+    badge: v.gender,
+  }));
+
   return (
     <div className="bg-[#101726] rounded-3xl p-7 sm:p-9 shadow-xl space-y-6">
       <div className="flex items-center justify-between border-b border-white/[0.06] pb-5">
@@ -52,79 +62,46 @@ export default function SpeechControlsRack({
         <span className="w-3 h-3 rounded-full bg-emerald-400" title="Engine online" />
       </div>
 
-      {/* Target Language Selection */}
+      {/* Target Language Selection with Custom Select */}
       <div className="space-y-2">
-        <label htmlFor="target-lang-select" className="text-base font-bold text-slate-200 block">
+        <label className="text-base font-bold text-slate-200 block">
           African Language
         </label>
-        <select
-          id="target-lang-select"
+        <CustomSelect
           value={selectedLang}
-          onChange={(e) => onLangChange(e.target.value)}
-          className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 h-14 cursor-pointer"
-        >
-          <optgroup label="🇺🇬 Uganda">
-            <option value="lug">Luganda (Central)</option>
-            <option value="nyn">Runyankore-Rukiga (Western)</option>
-            <option value="ach">Acholi (Northern)</option>
-          </optgroup>
-          <optgroup label="🇰🇪 East Africa">
-            <option value="swa">Kiswahili (East Africa)</option>
-            <option value="kin">Kinyarwanda (Rwanda)</option>
-            <option value="som">Somali (Horn of Africa)</option>
-          </optgroup>
-          <optgroup label="🇳🇬 West Africa">
-            <option value="yor">Èdè Yorùbá (Nigeria)</option>
-            <option value="ibo">Asụsụ Igbo (Nigeria)</option>
-            <option value="hau">Harshen Hausa (Nigeria / Sahel)</option>
-            <option value="wol">Wolof (Senegal)</option>
-          </optgroup>
-          <optgroup label="🇿🇦 Southern Africa">
-            <option value="zul">isiZulu (South Africa)</option>
-            <option value="xho">isiXhosa (South Africa)</option>
-          </optgroup>
-          <optgroup label="🇪🇹 Horn & Central">
-            <option value="amh">Amharic (Ethiopia)</option>
-            <option value="lin">Lingala (DR Congo)</option>
-          </optgroup>
-        </select>
+          onChange={onLangChange}
+          groups={AFRICAN_LANGUAGE_GROUPS}
+          placeholder="Select an African language..."
+          ariaLabel="Target African Language"
+        />
       </div>
 
-      {/* Speaker Persona Selection */}
+      {/* Speaker Persona Selection with Custom Select */}
       <div className="space-y-2">
-        <label htmlFor="speaker-persona-select" className="text-base font-bold text-slate-200 block">
+        <label className="text-base font-bold text-slate-200 block">
           Speaker Persona
         </label>
-        <select
-          id="speaker-persona-select"
+        <CustomSelect
           value={selectedVoice}
-          onChange={(e) => onVoiceChange(e.target.value)}
-          className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 h-14 cursor-pointer"
-        >
-          {voices.map((v) => (
-            <option key={v.voice_id} value={v.voice_id}>
-              {v.flag} {v.name} ({v.gender} • {v.dialect || v.language})
-            </option>
-          ))}
-        </select>
+          onChange={onVoiceChange}
+          options={voiceOptions}
+          placeholder="Select speaker persona..."
+          ariaLabel="Speaker Persona"
+        />
       </div>
 
-      {/* Inference Runtime Engine Selection */}
+      {/* Inference Runtime Engine Selection with Custom Select */}
       <div className="space-y-2">
-        <label htmlFor="runtime-engine-select" className="text-base font-bold text-slate-200 block">
+        <label className="text-base font-bold text-slate-200 block">
           Inference Runtime Engine
         </label>
-        <select
-          id="runtime-engine-select"
+        <CustomSelect
           value={selectedEngine}
-          onChange={(e) => onEngineChange(e.target.value)}
-          className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 h-14 cursor-pointer"
-        >
-          <option value="sunbird">☁️ Sunbird AI Regional Cloud (Production Neural Speech)</option>
-          <option value="sherpa_mms">🚀 Local Sherpa-ONNX MMS-TTS (Local INT8, ~35MB RAM)</option>
-          <option value="omnivoice">🧬 Local OmniVoice GGUF (Voice Cloning Q4_K_M)</option>
-          <option value="browser">🗣️ Browser Neural Speech Engine (Instant Real Voice)</option>
-        </select>
+          onChange={onEngineChange}
+          options={INFERENCE_ENGINE_OPTIONS}
+          placeholder="Select inference engine..."
+          ariaLabel="Inference Runtime Engine"
+        />
 
         <div className="mt-2 text-sm text-slate-400 flex items-center justify-between font-medium">
           <span>{engineHelp}</span>

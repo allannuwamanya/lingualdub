@@ -1,4 +1,12 @@
 import React from 'react';
+import CustomSelect, { type SelectOption } from '../CustomSelect';
+import { AFRICAN_LANGUAGE_GROUPS } from '../lab/labConfig';
+
+const GENDER_OPTIONS: SelectOption[] = [
+  { value: 'Female', label: 'Female', description: 'Alto / Soprano Range' },
+  { value: 'Male', label: 'Male', description: 'Tenor / Bass Range' },
+  { value: 'Neutral', label: 'Neutral', description: 'Youthful / Non-binary Range' },
+];
 
 interface ClonerIdentityFormProps {
   name: string;
@@ -62,39 +70,12 @@ export default function ClonerIdentityForm({
           <label htmlFor="clone-lang" className="text-base font-bold text-slate-200 block">
             Primary Native Language <span className="text-rose-400">*</span>
           </label>
-          <select
+          <CustomSelect
             id="clone-lang"
             value={language}
-            onChange={(e) => onLanguageChange(e.target.value)}
-            className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 transition-all h-14 cursor-pointer"
-          >
-            <optgroup label="🇺🇬 Uganda">
-              <option value="lug">Luganda (Central Buganda)</option>
-              <option value="nyn">Runyankore (Western Region)</option>
-              <option value="ach">Acholi (Northern Luo)</option>
-            </optgroup>
-            <optgroup label="🇰🇪🇷🇼 East Africa">
-              <option value="swa">Kiswahili (East Africa)</option>
-              <option value="kin">Kinyarwanda (Rwanda)</option>
-            </optgroup>
-            <optgroup label="🇳🇬🇸🇳 West Africa">
-              <option value="yor">Yoruba (Nigeria)</option>
-              <option value="ibo">Igbo (Nigeria)</option>
-              <option value="hau">Hausa (Nigeria / Sahel)</option>
-              <option value="wol">Wolof (Senegal)</option>
-            </optgroup>
-            <optgroup label="🇿🇦 Southern Africa">
-              <option value="zul">isiZulu (South Africa)</option>
-              <option value="xho">isiXhosa (South Africa)</option>
-            </optgroup>
-            <optgroup label="🇪🇹🇸🇴 Horn of Africa">
-              <option value="amh">Amharic (Ethiopia)</option>
-              <option value="som">Af-Soomaali (Somalia)</option>
-            </optgroup>
-            <optgroup label="🇨🇩 Central Africa">
-              <option value="lin">Lingala (DR Congo)</option>
-            </optgroup>
-          </select>
+            onChange={onLanguageChange}
+            groups={AFRICAN_LANGUAGE_GROUPS}
+          />
         </div>
 
         {/* Gender */}
@@ -102,16 +83,12 @@ export default function ClonerIdentityForm({
           <label htmlFor="clone-gender" className="text-base font-bold text-slate-200 block">
             Gender Pitch Profile <span className="text-rose-400">*</span>
           </label>
-          <select
+          <CustomSelect
             id="clone-gender"
             value={gender}
-            onChange={(e) => onGenderChange(e.target.value)}
-            className="w-full bg-[#070b14] rounded-2xl px-5 text-base sm:text-lg text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 transition-all h-14 cursor-pointer"
-          >
-            <option value="Female">Female (Alto / Soprano Range)</option>
-            <option value="Male">Male (Tenor / Bass Range)</option>
-            <option value="Neutral">Neutral / Youthful Range</option>
-          </select>
+            onChange={onGenderChange}
+            options={GENDER_OPTIONS}
+          />
         </div>
 
         {/* Dialect / Accent Description */}
