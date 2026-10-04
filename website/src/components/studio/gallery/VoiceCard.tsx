@@ -10,7 +10,6 @@ import {
   Languages,
   Sparkles,
   Trash2,
-  Share2,
 } from 'lucide-react';
 import type { VoiceOption } from '../../../types/studio';
 import { NATIVE_LANG_NAMES } from '../../../types/studio';
@@ -49,39 +48,39 @@ export default function VoiceCard({
   return (
     <article
       aria-label={`Voice profile: ${voice.name}`}
-      className={`bg-[#101726] hover:bg-[#141c30] rounded-2xl p-6 shadow-xl flex flex-col justify-between transition-all group ${
+      className={`bg-[#101726] hover:bg-[#141d30] rounded-3xl p-7 sm:p-8 shadow-xl flex flex-col justify-between transition-all group ${
         isPlaying ? 'ring-2 ring-indigo-500/70 bg-[#141d33]' : ''
       }`}
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* ── Top Bar: Flag, Language, Tags ── */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-3xl leading-none" role="img" aria-label={`Flag of ${voice.country || 'Africa'}`}>
+          <div className="flex items-center gap-3.5">
+            <span className="text-4xl leading-none" role="img" aria-label={`Flag of ${voice.country || 'Africa'}`}>
               {voice.flag || (isCloned ? '🧬' : '🌍')}
             </span>
             <div>
-              <span className="text-sm font-bold text-white block">
+              <span className="text-lg font-extrabold text-white block tracking-tight">
                 {nativeName || voice.country || 'African Voice'}
               </span>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-sm text-slate-300 font-mono mt-0.5 block">
                 {voice.country || 'Regional'}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {isCloned && (
-              <span className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 font-semibold flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
+              <span className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 font-bold flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" />
                 Custom Clone
               </span>
             )}
-            <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg bg-white/[0.06] text-slate-200 uppercase">
+            <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-white/[0.06] text-slate-200 uppercase tracking-wide">
               {voice.language}
             </span>
             <span
-              className={`text-xs font-medium px-2.5 py-1 rounded-lg ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${
                 voice.gender === 'Female'
                   ? 'bg-purple-500/15 text-purple-300'
                   : 'bg-indigo-500/15 text-indigo-300'
@@ -95,70 +94,70 @@ export default function VoiceCard({
         {/* ── Speaker Name & Dialect ── */}
         <div>
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xl font-bold text-white group-hover:text-indigo-200 transition-colors">
+            <h3 className="text-2xl font-extrabold text-white group-hover:text-indigo-200 transition-colors tracking-tight">
               {voice.name}
             </h3>
             {isPlaying && (
-              <span className="flex items-center gap-1.5 text-xs font-mono text-indigo-400 font-semibold shrink-0">
-                <Activity className="w-3.5 h-3.5 animate-pulse" />
+              <span className="flex items-center gap-1.5 text-sm font-mono text-indigo-400 font-bold shrink-0">
+                <Activity className="w-4 h-4 animate-pulse" />
                 <span>Auditioning</span>
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-300 mt-1">
+          <p className="text-base text-slate-200 font-medium mt-1">
             {voice.dialect || 'Native Authentic African Dialect'}
           </p>
         </div>
 
         {/* ── Native Phrase Audition Box ── */}
-        <div className="bg-[#070b14] rounded-xl p-3.5 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span className="flex items-center gap-1.5">
-              <Languages className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="bg-[#070b14] rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between text-sm text-slate-300 font-semibold">
+            <span className="flex items-center gap-2">
+              <Languages className="w-4 h-4 text-indigo-400" />
               <span>Audition Script</span>
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handleCopyPhrase}
-                className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500"
                 title="Copy audition script"
                 aria-label="Copy audition script"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
               <button
                 type="button"
                 onClick={() => setShowTranslation(!showTranslation)}
-                className="text-indigo-400 hover:text-indigo-300 text-xs font-semibold cursor-pointer underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="text-indigo-400 hover:text-indigo-300 text-sm font-bold cursor-pointer underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 {showTranslation ? 'Hide English' : 'Show English'}
               </button>
             </div>
           </div>
 
-          <p className="text-sm text-slate-200 leading-relaxed font-normal">
+          <p className="text-base sm:text-lg text-slate-100 leading-relaxed font-medium">
             &ldquo;{greeting.native}&rdquo;
           </p>
 
           {greeting.phonetics && (
-            <p className="text-xs text-indigo-300/80 font-mono italic">
+            <p className="text-sm text-indigo-300 font-mono italic">
               {greeting.phonetics}
             </p>
           )}
 
           {showTranslation && (
-            <div className="pt-2 mt-2 border-t border-white/[0.06] text-xs text-slate-400 leading-normal">
-              <span className="text-slate-500 font-medium">Translation: </span>
+            <div className="pt-3 mt-2 border-t border-white/[0.06] text-sm sm:text-base text-slate-300 leading-relaxed">
+              <span className="text-slate-400 font-semibold">Translation: </span>
               &ldquo;{greeting.english}&rdquo;
             </div>
           )}
         </div>
 
         {/* ── Audio Engine & Quality Metadata ── */}
-        <div className="flex items-center justify-between text-xs text-slate-400 font-mono pt-1">
+        <div className="flex items-center justify-between text-sm text-slate-300 font-mono pt-1 font-medium">
           <span>{voice.sampleRate || '16-24 kHz Mono PCM'}</span>
-          <span className="text-slate-500">
+          <span className="text-slate-400">
             {isCloned ? '192-d ECAPA' : voice.language === 'lug' ? 'Sunbird Neural' : 'Sherpa INT8'}
           </span>
         </div>
@@ -166,13 +165,13 @@ export default function VoiceCard({
 
       {/* ── Animated Waveform Bars during Playback ── */}
       {isPlaying && (
-        <div className="flex items-center justify-center gap-1 py-3 my-2" aria-hidden="true">
+        <div className="flex items-center justify-center gap-1.5 py-4 my-2" aria-hidden="true">
           {[40, 70, 90, 60, 100, 75, 45, 85, 95, 55, 75, 40].map((height, i) => (
             <span
               key={i}
-              className="w-1 bg-indigo-500 rounded-full animate-pulse"
+              className="w-1.5 bg-indigo-500 rounded-full animate-pulse"
               style={{
-                height: `${Math.max(8, (height * 24) / 100)}px`,
+                height: `${Math.max(10, (height * 28) / 100)}px`,
                 animationDelay: `${i * 70}ms`,
                 animationDuration: '600ms',
               }}
@@ -182,26 +181,26 @@ export default function VoiceCard({
       )}
 
       {/* ── Bottom Action Row ── */}
-      <div className="flex items-center gap-3 mt-6 pt-2">
+      <div className="flex items-center gap-3 mt-7 pt-2">
         {/* Audition Button */}
         <button
           type="button"
           onClick={onAudition}
-          className={`flex-1 min-h-[46px] px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+          className={`flex-1 h-14 px-5 rounded-2xl text-base font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 ${
             isPlaying
               ? 'bg-indigo-600 text-white shadow-md'
-              : 'bg-white/[0.08] hover:bg-white/[0.14] text-slate-200'
+              : 'bg-white/[0.08] hover:bg-white/[0.14] text-slate-200 hover:text-white'
           }`}
           aria-label={isPlaying ? `Pause voice ${voice.name}` : `Audition voice ${voice.name}`}
         >
           {isPlaying ? (
             <>
-              <Pause className="w-4 h-4 fill-white" />
+              <Pause className="w-5 h-5 fill-white" />
               <span>Pause</span>
             </>
           ) : (
             <>
-              <Play className="w-4 h-4 fill-current" />
+              <Play className="w-5 h-5 fill-current" />
               <span>Audition</span>
             </>
           )}
@@ -213,11 +212,11 @@ export default function VoiceCard({
           onClick={() => {
             navigate(`/studio?lang=${voice.language}&voice=${voice.voice_id}&text=${encodeURIComponent(greeting.native)}`);
           }}
-          className="flex-1 min-h-[46px] px-4 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20 focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="flex-1 h-14 px-5 rounded-2xl text-base font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg shadow-indigo-600/25 focus-visible:ring-2 focus-visible:ring-indigo-500"
           aria-label={`Use ${voice.name} in Speech Lab`}
         >
           <span>Use in Lab</span>
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-5 h-5" />
         </button>
 
         {/* Delete Clone Action (Only for custom clones) */}
@@ -229,11 +228,11 @@ export default function VoiceCard({
                 onDeleteClone(voice.voice_id);
               }
             }}
-            className="p-3 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer min-h-[46px] min-w-[46px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-rose-500"
+            className="h-14 w-14 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-2xl transition-colors cursor-pointer flex items-center justify-center shrink-0 focus-visible:ring-2 focus-visible:ring-rose-500"
             title="Delete custom voice clone"
             aria-label={`Delete custom voice ${voice.name}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5" />
           </button>
         )}
       </div>

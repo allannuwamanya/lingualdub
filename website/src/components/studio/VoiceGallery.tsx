@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Dna, Volume2 } from 'lucide-react';
+import { Users, Dna } from 'lucide-react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
 import { PRESET_VOICES, NATIVE_LANG_NAMES } from '../../types/studio';
 import type { VoiceOption } from '../../types/studio';
@@ -92,26 +92,26 @@ export default function VoiceGallery() {
 
   return (
     <div
-      className="space-y-6 max-w-[1600px] mx-auto page-fade-in"
+      className="space-y-7 max-w-[1600px] mx-auto page-fade-in"
       role="region"
       aria-label="African Voice Gallery"
     >
       {/* ── Page Header Banner ── */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-            <Users className="w-6 h-6" />
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 py-4">
+        <div className="flex items-start sm:items-center gap-5">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/15 flex items-center justify-center text-indigo-400 shrink-0 shadow-lg shadow-indigo-500/10">
+            <Users className="w-8 h-8" />
           </div>
           <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <div className="flex items-center gap-3.5 flex-wrap">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
                 African Voice Gallery
               </h1>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+              <span className="px-4 py-1.5 rounded-full text-sm font-bold bg-slate-800 text-slate-200 shadow-sm">
                 {filteredVoices.length} of {allVoices.length} Personas
               </span>
             </div>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-base sm:text-lg text-slate-300 mt-2 font-normal leading-relaxed max-w-3xl">
               Audition native African speakers across East, West, Southern, Central, and Horn of Africa with authentic prosody.
             </p>
           </div>
@@ -120,9 +120,9 @@ export default function VoiceGallery() {
         <button
           type="button"
           onClick={() => navigate('/cloner')}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition-all shadow-md shadow-indigo-600/20 shrink-0 cursor-pointer min-h-[46px] focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl text-base transition-all shadow-lg shadow-indigo-600/25 shrink-0 cursor-pointer h-14 focus-visible:ring-2 focus-visible:ring-indigo-500"
         >
-          <Dna className="w-4 h-4" />
+          <Dna className="w-5 h-5" />
           <span>Clone Custom Voice</span>
         </button>
       </header>
@@ -152,7 +152,7 @@ export default function VoiceGallery() {
         /* ── Voice Cards Grid ── */
         <main
           aria-label="Speaker Personas Grid"
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7"
         >
           {filteredVoices.map((voice) => {
             const isThisVoicePlaying = audioTrackName.includes(voice.name) && isPlaying;

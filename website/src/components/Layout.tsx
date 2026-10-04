@@ -91,7 +91,7 @@ function StudioNav({ compact = false }: { compact?: boolean }) {
       {STUDIO_NAV.map((group) => (
         <div key={group.label}>
           <p
-            className={`px-3 mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 ${
+            className={`px-3.5 mb-2.5 text-xs font-extrabold uppercase tracking-wider text-slate-400 ${
               compact ? 'hidden lg:block' : ''
             }`}
           >
@@ -105,10 +105,10 @@ function StudioNav({ compact = false }: { compact?: boolean }) {
                   end={end}
                   title={label}
                   className={({ isActive }) =>
-                    `group relative flex items-center gap-3.5 h-11 px-3.5 rounded-xl text-[15px] font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+                    `group relative flex items-center gap-3.5 h-12 px-4 rounded-xl text-base font-semibold transition-all outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                       isActive
-                        ? 'bg-indigo-600/20 text-white font-semibold shadow-sm ring-1 ring-indigo-500/30'
-                        : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
+                        ? 'bg-indigo-600/25 text-white font-bold shadow-sm ring-1 ring-indigo-500/40'
+                        : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
                     } ${compact ? 'justify-center lg:justify-start' : ''}`
                   }
                 >
@@ -122,7 +122,7 @@ function StudioNav({ compact = false }: { compact?: boolean }) {
                       />
                       <span className={compact ? 'hidden lg:inline' : ''}>{label}</span>
                       {isActive && (
-                        <span className="hidden lg:block ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,1)]" />
+                        <span className="hidden lg:block ml-auto w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,1)]" />
                       )}
                     </>
                   )}
@@ -238,21 +238,21 @@ export default function Layout() {
   const statusPills = (
     <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-300">
       <span
-        className="inline-flex items-center gap-2 h-8 px-3 rounded-lg bg-white/[0.04] text-slate-300"
+        className="inline-flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white/[0.05] text-slate-200 text-xs sm:text-sm font-semibold"
         title={cloudConnected ? 'Sunbird Regional Cloud Token active' : 'Click API Key to configure token'}
       >
         <span
-          className={`w-2 h-2 rounded-full ${
+          className={`w-2.5 h-2.5 rounded-full ${
             cloudConnected ? 'bg-emerald-400' : 'bg-slate-600'
           }`}
           aria-hidden="true"
         />
-        <Cloud className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+        <Cloud className="w-4 h-4 text-slate-400" aria-hidden="true" />
         <span>{cloudConnected ? 'Sunbird Cloud' : 'Cloud Offline'}</span>
       </span>
 
       <span
-        className="inline-flex items-center gap-2 h-8 px-3 rounded-lg bg-white/[0.04] text-slate-300"
+        className="inline-flex items-center gap-2 h-9 px-3.5 rounded-xl bg-white/[0.05] text-slate-200 text-xs sm:text-sm font-semibold"
         title={
           server === 'online'
             ? 'Local LingualDub Python backend connected on :8000'
@@ -260,12 +260,12 @@ export default function Layout() {
         }
       >
         <span
-          className={`w-2 h-2 rounded-full ${
+          className={`w-2.5 h-2.5 rounded-full ${
             server === 'online' ? 'bg-emerald-400' : 'bg-slate-600'
           }`}
           aria-hidden="true"
         />
-        <Server className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+        <Server className="w-4 h-4 text-slate-400" aria-hidden="true" />
         <span>{server === 'checking' ? 'Probing…' : server === 'online' ? 'Local Edge :8000' : 'Edge Offline'}</span>
       </span>
     </div>
@@ -288,36 +288,36 @@ export default function Layout() {
       {isStudio ? (
         /* ───────────── STUDIO APP SHELL ───────────── */
         <>
-          <header className="h-16 shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 border-b border-white/[0.06] bg-[#0c1220]/95 backdrop-blur-md z-30">
-            <div className="flex items-center gap-3.5 min-w-0">
+          <header className="h-18 shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 border-b border-white/[0.06] bg-[#0c1220]/95 backdrop-blur-md z-30">
+            <div className="flex items-center gap-4 min-w-0">
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="md:hidden h-10 w-10 inline-flex items-center justify-center rounded-xl text-slate-300 hover:bg-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                className="md:hidden h-11 w-11 inline-flex items-center justify-center rounded-xl text-slate-300 hover:bg-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
                 aria-expanded={menuOpen}
               >
-                {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
 
               <Link
                 to="/studio"
-                className="flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 group"
+                className="flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 group"
               >
-                <div className="p-1 rounded-lg bg-indigo-500/10 group-hover:scale-105 transition-transform">
-                  <img src="/logo.png" alt="" className="h-7 w-7 object-contain" />
+                <div className="p-1 rounded-xl bg-indigo-500/10 group-hover:scale-105 transition-transform">
+                  <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
                 </div>
-                <span className="font-extrabold text-base tracking-tight text-white">LingualDub</span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/15 text-indigo-300 uppercase tracking-wider">
+                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white">LingualDub</span>
+                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 uppercase tracking-wider">
                   Studio
                 </span>
               </Link>
 
               {/* Breadcrumb separator & Active Room Badge */}
-              <div className="hidden sm:flex items-center gap-2 pl-3 text-sm font-medium text-slate-400">
-                <span className="text-slate-600">/</span>
-                <span className="flex items-center gap-2 text-white font-semibold">
-                  <activeRoom.icon className="w-4 h-4 text-indigo-400" aria-hidden="true" />
+              <div className="hidden sm:flex items-center gap-2.5 pl-3 text-sm sm:text-base font-medium text-slate-400">
+                <span className="text-slate-600 font-bold">/</span>
+                <span className="flex items-center gap-2 text-white font-bold">
+                  <activeRoom.icon className="w-4.5 h-4.5 text-indigo-400" aria-hidden="true" />
                   {activeRoom.label}
                 </span>
               </div>
@@ -330,7 +330,7 @@ export default function Layout() {
                 ref={keyTriggerRef}
                 type="button"
                 onClick={() => setKeyModalOpen(true)}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold text-slate-200 bg-white/[0.06] hover:bg-white/[0.1] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 h-11 px-4.5 rounded-xl text-sm sm:text-base font-bold text-slate-200 bg-white/[0.06] hover:bg-white/[0.1] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors cursor-pointer"
               >
                 <Key className="w-4 h-4 text-amber-400" aria-hidden="true" />
                 <span className="hidden sm:inline">API Key</span>
@@ -338,7 +338,7 @@ export default function Layout() {
 
               <Link
                 to="/"
-                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors"
+                className="inline-flex items-center gap-2 h-11 px-4.5 rounded-xl text-sm sm:text-base font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors"
                 title="Return to marketing website"
               >
                 <ArrowLeft className="w-4 h-4" aria-hidden="true" />
@@ -350,26 +350,26 @@ export default function Layout() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="LingualDub on GitHub"
-                className="h-10 w-10 inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors"
               >
-                <GithubIcon className="w-4 h-4" />
+                <GithubIcon className="w-5 h-5" />
               </a>
             </div>
           </header>
 
           <div className="flex flex-1 min-h-0 relative">
             {/* Desktop / tablet rail */}
-            <aside className="hidden md:flex flex-col justify-between shrink-0 md:w-16 lg:w-64 border-r border-white/[0.05] bg-[#090e1a] p-3 overflow-y-auto">
+            <aside className="hidden md:flex flex-col justify-between shrink-0 md:w-20 lg:w-72 border-r border-white/[0.05] bg-[#090e1a] p-4 overflow-y-auto">
               <StudioNav compact />
               <div className="mt-6 pt-4 border-t border-white/[0.05]">
                 <Link
                   to="/specs"
                   title="Framework docs"
-                  className="flex items-center gap-3 h-11 px-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/[0.06] hover:text-white md:justify-center lg:justify-start outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors"
+                  className="flex items-center gap-3 h-12 px-4 rounded-xl text-sm sm:text-base font-semibold text-slate-300 hover:bg-white/[0.06] hover:text-white md:justify-center lg:justify-start outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 transition-colors"
                 >
                   <BookOpen className="w-5 h-5 text-slate-400" aria-hidden="true" />
                   <span className="hidden lg:inline">Framework docs</span>
-                  <ExternalLink className="hidden lg:block w-3.5 h-3.5 ml-auto text-slate-500" aria-hidden="true" />
+                  <ExternalLink className="hidden lg:block w-4 h-4 ml-auto text-slate-500" aria-hidden="true" />
                 </Link>
               </div>
             </aside>
