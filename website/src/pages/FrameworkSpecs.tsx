@@ -6,9 +6,6 @@ import {
   BookOpen,
   FlaskConical,
   Compass,
-  ArrowRight,
-  ExternalLink,
-  Sparkles,
 } from 'lucide-react';
 import Architecture from './Architecture';
 import Abstractions from './Abstractions';
@@ -21,11 +18,11 @@ interface FrameworkSpecsProps {
 }
 
 const TABS = [
-  { id: 'architecture', label: 'Architecture & Pipeline DAG', icon: Cpu, badge: 'System Blueprint' },
-  { id: 'abstractions', label: 'Core Abstractions', icon: Layers, badge: '5 Primitives' },
-  { id: 'research', label: 'Research Whitepaper', icon: FlaskConical, badge: 'SALT Baselines' },
-  { id: 'docs', label: 'SDK & API Reference', icon: BookOpen, badge: 'Python + CLI' },
-  { id: 'overview', label: 'Project Mission', icon: Compass, badge: 'Overview' },
+  { id: 'architecture', label: 'Architecture & DAG', icon: Cpu },
+  { id: 'abstractions', label: 'Core Abstractions', icon: Layers },
+  { id: 'research', label: 'Research Whitepaper', icon: FlaskConical },
+  { id: 'docs', label: 'SDK & API Reference', icon: BookOpen },
+  { id: 'overview', label: 'Project Mission', icon: Compass },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
@@ -55,45 +52,51 @@ export default function FrameworkSpecs({ defaultTab = 'architecture' }: Framewor
   };
 
   return (
-    <div className="min-h-screen bg-[#070a12] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col page-fade-in">
       {/* Studio Sub-header for Specs & Architecture */}
-      <div className="border-b border-slate-800/80 bg-[#090d18]/90 backdrop-blur-md sticky top-14 z-30 px-4 sm:px-6 lg:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-              <BookOpen className="w-4 h-4" />
+      <div className="border-b border-white/[0.06] bg-[#070b14]/95 backdrop-blur-md sticky top-14 z-30 px-4 sm:px-6 lg:px-8 py-3.5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+              <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">
                   Framework Specifications & Knowledge Base
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/[0.06] text-slate-300 font-mono">
                   v0.1.0 Stable
                 </span>
               </div>
-              <h1 className="text-sm font-semibold text-slate-200">
+              <h1 className="text-sm font-semibold text-slate-200 mt-0.5">
                 Interoperable Speech-AI Architecture for African Languages
               </h1>
             </div>
           </div>
 
-          {/* Sub-tabs pill navigation */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {/* Sub-tabs pill navigation with 44px minimum touch targets */}
+          <div
+            className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none"
+            role="tablist"
+            aria-label="Framework documentation tabs"
+          >
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
+                  role="tab"
+                  aria-selected={isActive}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl text-[15px] font-medium transition-all whitespace-nowrap min-h-[44px] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                     isActive
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 border border-indigo-400/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 font-bold ring-1 ring-indigo-500/30'
+                      : 'text-slate-300 hover:text-white hover:bg-white/[0.05] bg-transparent'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -103,7 +106,7 @@ export default function FrameworkSpecs({ defaultTab = 'architecture' }: Framewor
       </div>
 
       {/* Tab Content Display */}
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-16" role="tabpanel">
         {activeTab === 'architecture' && <Architecture />}
         {activeTab === 'abstractions' && <Abstractions />}
         {activeTab === 'research' && <Research />}

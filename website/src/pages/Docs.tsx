@@ -1,36 +1,38 @@
+import React from 'react';
 import { BookOpen, Code2, Cpu, FileCode2, Layers, Sparkles, Terminal } from 'lucide-react';
 import GithubIcon from '../components/GithubIcon';
 
 export default function Docs() {
   return (
-    <div className="bg-[#090d16] text-white min-h-full">
+    <div className="bg-[#070b14] text-white min-h-full page-fade-in">
       {/* Header */}
-      <section className="border-b border-slate-800/80 py-16 bg-[#0c1220]/60">
+      <section className="py-20 bg-[#0b101c]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-950 border border-brand-800 text-brand-400 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            Developer & API Reference • v0.1.0
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/15 text-indigo-300 text-sm font-semibold mb-4">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span>Developer & API Reference • v0.1.0 Stable</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight mb-6">
             Documentation
           </h1>
-          <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
-            API reference, SDK integration guides, and component contracts for building and composing speech AI pipelines with LingualDub.
+          <p className="text-xl sm:text-2xl text-slate-200 leading-relaxed max-w-3xl font-normal">
+            API reference, SDK integration guides, and component contracts for building, composing,
+            and deploying speech AI pipelines with LingualDub.
           </p>
         </div>
       </section>
 
-      {/* Release Announcement Banner */}
-      <section className="py-8 bg-[#0c1220] border-b border-slate-800/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-brand-950 border border-brand-800/80 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
-            <div className="space-y-2">
+      {/* Release Announcement Banner (Elevated & Borderless) */}
+      <section className="py-10 bg-[#070b14]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#101726] rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 shadow-2xl">
+            <div className="space-y-3">
               <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Release v0.1.0 Stable</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">LingualDub v0.1.0 is Live</h2>
-              <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+              <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">LingualDub v0.1.0 is Live</h2>
+              <p className="text-lg text-slate-200 max-w-2xl leading-relaxed">
                 All foundational milestones (M0–M8) are complete: ASR, MT, TTS, code-switching, temporal alignment, voice retention, cross-lingual voice transfer, audio-visual sync, and Runyankole generalisation proof.
               </p>
             </div>
@@ -38,36 +40,38 @@ export default function Docs() {
               href="https://github.com/allannuwamanya/lingualdub"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-slate-950 bg-white hover:bg-slate-100 shadow transition-all shrink-0 text-sm"
+              className="inline-flex items-center gap-2.5 px-7 py-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/25 transition-all shrink-0 cursor-pointer text-base"
             >
-              <GithubIcon className="w-4 h-4 text-slate-950" />
-              Follow on GitHub
+              <GithubIcon className="w-5 h-5 text-white" />
+              <span>Follow on GitHub</span>
             </a>
           </div>
         </div>
       </section>
 
       {/* Python SDK Quickstart */}
-      <section className="py-16 border-b border-slate-800/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Python SDK: End-to-End Pipeline</h2>
-          <p className="text-sm text-slate-400 mb-8 max-w-2xl">
-            Execute a speech dubbing pipeline with declarative configuration, assembly-time capability checking, and full provenance tracking:
-          </p>
+      <section className="py-20 bg-[#0b101c]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10">
+            <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">Python SDK: End-to-End Pipeline</h2>
+            <p className="text-lg text-slate-200 mt-2 max-w-2xl leading-relaxed">
+              Execute a speech dubbing pipeline with declarative YAML configuration, assembly-time capability checking, and cryptographic consent tracking:
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Code Block */}
-            <div className="bg-black/90 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
-              <div className="bg-slate-900/80 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            {/* Code Block Container */}
+            <div className="bg-[#050811] rounded-3xl overflow-hidden shadow-2xl">
+              <div className="bg-[#090e1c] px-5 py-3.5 border-b border-white/[0.05] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500/80" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
                   <div className="w-3 h-3 rounded-full bg-green-500/80" />
                   <span className="font-mono text-xs text-slate-400 ml-2">quickstart.py</span>
                 </div>
-                <span className="text-[11px] font-mono text-brand-400 font-semibold">Python 3.10+</span>
+                <span className="text-xs font-mono text-indigo-400 font-semibold">Python 3.10+</span>
               </div>
-              <pre className="p-5 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+              <pre className="p-6 font-mono text-sm sm:text-[15px] text-slate-200 overflow-x-auto leading-relaxed">
 {`import lingualdub as ld
 
 # 1. Initialize Registry & discover manifests
@@ -124,13 +128,13 @@ print(f"Dubbed Artifacts: {result.artifacts}")`}
                   desc: 'Every run records pipeline structure, model versions, dataset provenance, and enforces consent_basis for ethical voice AI.',
                 },
               ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="bg-[#0f172a] rounded-xl p-5 border border-slate-800 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 text-brand-400">
-                    <Icon className="w-5 h-5" />
+                <div key={title} className="bg-[#101726] hover:bg-[#141d30] rounded-2xl p-7 shadow-md flex items-start gap-4 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0 text-indigo-400">
+                    <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base mb-1">{title}</h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">{desc}</p>
+                    <h3 className="font-bold text-white text-lg mb-1.5">{title}</h3>
+                    <p className="text-base text-slate-200 leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -140,14 +144,16 @@ print(f"Dubbed Artifacts: {result.artifacts}")`}
       </section>
 
       {/* Core Guides */}
-      <section className="py-16 bg-[#0c1220]/40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Technical Guides & Architecture</h2>
-          <p className="text-sm text-slate-400 mb-8">
-            Complete technical documentation for building adapters, registering datasets, and evaluating pipelines:
-          </p>
+      <section className="py-20 bg-[#070b14]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10">
+            <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">Technical Guides & Architecture</h2>
+            <p className="text-lg text-slate-200 mt-2">
+              Complete technical documentation for building adapters, registering datasets, and evaluating pipelines:
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[
               {
                 title: 'Component Authoring Guide',
@@ -180,16 +186,19 @@ print(f"Dubbed Artifacts: {result.artifacts}")`}
                 tag: 'AV-Sync',
               },
             ].map(sec => (
-              <div key={sec.title} className="bg-[#0f172a] rounded-xl p-5 border border-slate-800 flex flex-col justify-between hover:border-slate-700 transition-colors">
+              <div
+                key={sec.title}
+                className="bg-[#101726] hover:bg-[#141d30] rounded-2xl p-7 flex flex-col justify-between shadow-md transition-all group"
+              >
                 <div>
-                  <span className="text-[10px] font-bold px-2.5 py-1 rounded bg-slate-800 text-brand-300 border border-slate-700 inline-block mb-3">
+                  <span className="text-xs font-semibold px-3.5 py-1.5 rounded-full bg-indigo-500/15 text-indigo-300 inline-block mb-4">
                     {sec.tag}
                   </span>
-                  <h3 className="font-bold text-white text-base mb-1.5">{sec.title}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">{sec.desc}</p>
+                  <h3 className="font-bold text-white text-xl mb-2.5 group-hover:text-indigo-300 transition-colors">{sec.title}</h3>
+                  <p className="text-base text-slate-300 leading-relaxed font-normal">{sec.desc}</p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
-                  <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="mt-6 pt-4 border-t border-white/[0.05] flex items-center gap-2 text-sm text-emerald-400 font-semibold">
+                  <BookOpen className="w-4 h-4 text-emerald-400" />
                   <span>Available in v0.1.0</span>
                 </div>
               </div>
