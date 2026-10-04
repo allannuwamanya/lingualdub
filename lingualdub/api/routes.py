@@ -236,8 +236,8 @@ class SpeechAPIHandler:
         from lingualdub.core.segment import Segment
 
         text = payload.get("text", "").strip()
-        src = payload.get("source_language", "eng")
-        tgt = payload.get("target_language", "lug")
+        src = payload.get("source_language") or payload.get("source_lang", "eng")
+        tgt = payload.get("target_language") or payload.get("target_lang", "lug")
         if not text:
             raise ValueError("Text cannot be empty.")
 
