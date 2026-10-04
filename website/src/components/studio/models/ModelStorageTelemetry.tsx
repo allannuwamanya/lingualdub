@@ -18,59 +18,59 @@ export default function ModelStorageTelemetry({
   return (
     <section
       aria-label="Compute and Storage Telemetry"
-      className="grid grid-cols-1 md:grid-cols-3 gap-5"
+      className="grid grid-cols-1 md:grid-cols-3 gap-6"
     >
       {/* Host Compute Card */}
-      <div className="p-5 bg-[#101726] rounded-2xl shadow-md flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-          <Cpu className="w-6 h-6" />
+      <div className="p-6 bg-[#101726] rounded-3xl shadow-xl flex items-center gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+          <Cpu className="w-7 h-7" />
         </div>
         <div className="min-w-0">
-          <div className="text-xs font-mono text-slate-400">Host Compute Accelerator</div>
-          <div className="text-sm font-bold text-white truncate mt-0.5">
+          <div className="text-sm font-mono text-slate-400 font-medium">Host Compute Accelerator</div>
+          <div className="text-base font-extrabold text-white truncate mt-1">
             {hardware
               ? `${hardware.device_name} (${hardware.accelerator.toUpperCase()})`
               : 'Detecting accelerator...'}
           </div>
-          <div className="text-xs text-indigo-300 font-mono mt-0.5">
+          <div className="text-sm text-indigo-300 font-mono mt-1 font-semibold">
             Quant: {hardware?.recommended_gguf_quant || 'Q4_K_M (Fastest)'}
           </div>
         </div>
       </div>
 
       {/* Local Storage Footprint Card */}
-      <div className="p-5 bg-[#101726] rounded-2xl shadow-md flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-          <Database className="w-6 h-6" />
+      <div className="p-6 bg-[#101726] rounded-3xl shadow-xl flex items-center gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+          <Database className="w-7 h-7" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex justify-between items-center text-xs font-mono text-slate-400 mb-1.5">
+          <div className="flex justify-between items-center text-sm font-mono text-slate-300 mb-2 font-medium">
             <span>Local Model Footprint</span>
             <span className="text-white font-bold">{totalDiskUsedMb} MB</span>
           </div>
-          <div className="w-full h-2 bg-[#070b14] rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-[#070b14] rounded-full overflow-hidden">
             <div
               className="h-full bg-indigo-500 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(100, (totalDiskUsedMb / 2048) * 100)}%` }}
             />
           </div>
-          <div className="text-xs text-slate-400 font-mono mt-1">
+          <div className="text-sm text-slate-400 font-mono mt-1.5 font-medium">
             ~2.0 GB Allocated Edge Cache
           </div>
         </div>
       </div>
 
       {/* Cached Pipelines Counter Card */}
-      <div className="p-5 bg-[#101726] rounded-2xl shadow-md flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-          <Layers className="w-6 h-6" />
+      <div className="p-6 bg-[#101726] rounded-3xl shadow-xl flex items-center gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+          <Layers className="w-7 h-7" />
         </div>
         <div>
-          <div className="text-xs font-mono text-slate-400">Cached Pipelines</div>
-          <div className="text-sm font-bold text-white mt-0.5">
+          <div className="text-sm font-mono text-slate-400 font-medium">Cached Pipelines</div>
+          <div className="text-base font-extrabold text-white mt-1">
             {downloadedCount} of {totalModelsCount} Weights Ready
           </div>
-          <div className="text-xs text-slate-400 font-mono mt-0.5">
+          <div className="text-sm text-emerald-400 font-mono mt-1 font-semibold">
             Zero-latency offline ready
           </div>
         </div>

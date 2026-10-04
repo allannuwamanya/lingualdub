@@ -21,7 +21,7 @@ export default function AgentTranscriptView({
 
   return (
     <div
-      className="h-[460px] overflow-y-auto bg-[#070b14] rounded-2xl p-5 space-y-5 scrollbar-thin"
+      className="h-[520px] overflow-y-auto bg-[#070b14] rounded-3xl p-6 space-y-6 scrollbar-thin"
       role="log"
       aria-live="polite"
       aria-label="Conversation Transcript Feed"
@@ -36,12 +36,12 @@ export default function AgentTranscriptView({
 
       {isInferring && (
         <div className="flex flex-col items-start">
-          <span className="text-xs font-semibold text-slate-400 mb-1 px-1">
+          <span className="text-sm font-bold text-slate-400 mb-1.5 px-1">
             LingualDub Agent
           </span>
-          <div className="bg-[#111728] text-slate-300 rounded-2xl rounded-bl-none px-5 py-3.5 text-sm flex items-center gap-2.5 shadow-md">
-            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-            <span className="text-slate-300">Synthesizing acoustic response...</span>
+          <div className="bg-[#111728] text-slate-200 rounded-3xl rounded-bl-none px-6 py-4 text-base font-medium flex items-center gap-3 shadow-md">
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse" />
+            <span>Synthesizing acoustic response...</span>
           </div>
         </div>
       )}

@@ -11,40 +11,40 @@ export default function MasteringHeaderBanner({
   onToggleBypass,
 }: MasteringHeaderBannerProps) {
   return (
-    <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 sm:p-8 bg-[#101726] rounded-3xl shadow-xl">
-      <div className="flex items-start sm:items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-          <Sliders className="w-7 h-7" />
+    <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-7 sm:p-9 bg-[#101726] rounded-3xl shadow-xl">
+      <div className="flex items-start sm:items-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+          <Sliders className="w-8 h-8" />
         </div>
         <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <div className="flex items-center gap-3.5 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               Audio Mastering & Loudness Rack
             </h1>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 tracking-wide">
+            <span className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/15 text-indigo-300 uppercase tracking-wider">
               EBU R128 Compliant
             </span>
           </div>
-          <p className="text-sm sm:text-base text-slate-300 mt-1.5 leading-relaxed">
-            Multi-band dynamic range compression, automatic dialogue ducking, and True-Peak limiting.
+          <p className="text-base sm:text-lg text-slate-300 mt-2 leading-relaxed max-w-3xl">
+            Multi-band dynamic range compression, automatic dialogue ducking, and True-Peak limiting calibrated for African broadcast standards.
           </p>
         </div>
       </div>
 
       {/* A/B Bypass Button */}
-      <div className="flex items-center gap-2.5 shrink-0">
+      <div className="flex items-center gap-3 self-start lg:self-center shrink-0">
         <button
           type="button"
           onClick={onToggleBypass}
-          className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer min-h-[42px] focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+          className={`h-12 px-5 rounded-2xl text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500 ${
             isBypass
-              ? 'bg-amber-500/15 text-amber-300 font-bold ring-1 ring-amber-500/30'
-              : 'bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 hover:text-white'
+              ? 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/40 shadow-md'
+              : 'bg-white/[0.08] hover:bg-white/[0.14] text-slate-200 hover:text-white'
           }`}
           title="Toggle between mastered audio and unprocessed original audio"
           aria-pressed={isBypass}
         >
-          <RotateCcw className={`w-3.5 h-3.5 ${isBypass ? 'text-amber-400' : 'text-slate-400'}`} />
+          <RotateCcw className={`w-4 h-4 ${isBypass ? 'text-amber-400' : 'text-slate-400'}`} />
           <span>{isBypass ? 'Bypass ON (Dry Signal)' : 'A/B Bypass Active (Wet Signal)'}</span>
         </button>
       </div>

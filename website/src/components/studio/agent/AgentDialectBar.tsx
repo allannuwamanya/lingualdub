@@ -18,16 +18,16 @@ export default function AgentDialectBar({
   return (
     <div
       aria-label="Agent Dialect and Session Actions"
-      className="flex flex-wrap items-center justify-between gap-3 p-4.5 bg-[#101726] rounded-2xl shadow-md"
+      className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6 bg-[#101726] rounded-3xl shadow-xl"
     >
       {/* Dialect Buttons Carousel */}
       <div
         role="tablist"
         aria-label="Agent Spoken Dialect"
-        className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none py-0.5 flex-1"
+        className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none py-1 flex-1"
       >
-        <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 mr-1 shrink-0">
-          <Globe className="w-4 h-4 text-indigo-400" /> Dialect:
+        <span className="text-sm font-bold text-slate-300 flex items-center gap-2 mr-1 shrink-0">
+          <Globe className="w-5 h-5 text-indigo-400" /> Dialect:
         </span>
         {SUPPORTED_AGENT_LANGS.map((lang) => {
           const active = selectedLang === lang.code;
@@ -38,13 +38,13 @@ export default function AgentDialectBar({
               aria-selected={active}
               type="button"
               onClick={() => onSelectLang(lang.code)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap min-h-[36px] focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              className={`h-11 px-4 rounded-xl text-sm font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 active
-                  ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/25'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                   : 'bg-[#070b14] text-slate-300 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
-              <span>{lang.flag}</span>
+              <span className="text-base leading-none">{lang.flag}</span>
               <span>{lang.label}</span>
             </button>
           );
@@ -52,24 +52,24 @@ export default function AgentDialectBar({
       </div>
 
       {/* Session Export & Reset */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2.5 shrink-0">
         <button
           type="button"
           onClick={onExportTranscript}
-          className="px-3.5 py-2 text-xs text-slate-300 hover:text-white bg-[#070b14] hover:bg-white/[0.08] rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer min-h-[38px] focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="h-11 px-4.5 text-sm font-bold text-slate-200 hover:text-white bg-[#070b14] hover:bg-white/[0.08] rounded-xl flex items-center gap-2 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500"
           title="Download conversation session transcript"
         >
-          <Download className="w-3.5 h-3.5 text-indigo-400" />
+          <Download className="w-4 h-4 text-indigo-400" />
           <span>Export</span>
         </button>
 
         <button
           type="button"
           onClick={onResetSession}
-          className="px-3.5 py-2 text-xs text-slate-300 hover:text-rose-400 bg-[#070b14] hover:bg-rose-500/10 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer min-h-[38px] focus-visible:ring-2 focus-visible:ring-rose-500"
+          className="h-11 px-4.5 text-sm font-bold text-slate-200 hover:text-rose-400 bg-[#070b14] hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-rose-500"
           title="Clear and reset agent chat session"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-4 h-4" />
           <span>Reset</span>
         </button>
       </div>

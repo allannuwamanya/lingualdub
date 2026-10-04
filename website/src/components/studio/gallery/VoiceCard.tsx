@@ -1,19 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Play,
-  Pause,
-  ArrowRight,
-  Activity,
-  Copy,
-  Check,
-  Languages,
-  Sparkles,
-  Trash2,
-} from 'lucide-react';
+import { Play, Pause, ArrowRight, Activity, Sparkles, Trash2 } from 'lucide-react';
 import type { VoiceOption } from '../../../types/studio';
 import { NATIVE_LANG_NAMES } from '../../../types/studio';
 import { getVoiceGreeting } from './galleryData';
+import VoiceAuditionBox from './VoiceAuditionBox';
 
 interface VoiceCardProps {
   voice: VoiceOption;
@@ -29,21 +20,10 @@ export default function VoiceCard({
   onDeleteClone,
 }: VoiceCardProps) {
   const navigate = useNavigate();
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const nativeName = NATIVE_LANG_NAMES[voice.language];
   const greeting = getVoiceGreeting(voice.language, voice.name);
   const isCloned = voice.isCloned || voice.voice_id.startsWith('clone_');
-
-  const handleCopyPhrase = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(greeting.native);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
-  };
 
   return (
     <article
@@ -109,50 +89,12 @@ export default function VoiceCard({
           </p>
         </div>
 
-        {/* ── Native Phrase Audition Box ── */}
-        <div className="bg-[#070b14] rounded-2xl p-5 space-y-3">
-          <div className="flex items-center justify-between text-sm text-slate-300 font-semibold">
-            <span className="flex items-center gap-2">
-              <Languages className="w-4 h-4 text-indigo-400" />
-              <span>Audition Script</span>
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleCopyPhrase}
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-500"
-                title="Copy audition script"
-                aria-label="Copy audition script"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowTranslation(!showTranslation)}
-                className="text-indigo-400 hover:text-indigo-300 text-sm font-bold cursor-pointer underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500"
-              >
-                {showTranslation ? 'Hide English' : 'Show English'}
-              </button>
-            </div>
-          </div>
-
-          <p className="text-base sm:text-lg text-slate-100 leading-relaxed font-medium">
-            &ldquo;{greeting.native}&rdquo;
-          </p>
-
-          {greeting.phonetics && (
-            <p className="text-sm text-indigo-300 font-mono italic">
-              {greeting.phonetics}
-            </p>
-          )}
-
-          {showTranslation && (
-            <div className="pt-3 mt-2 border-t border-white/[0.06] text-sm sm:text-base text-slate-300 leading-relaxed">
-              <span className="text-slate-400 font-semibold">Translation: </span>
-              &ldquo;{greeting.english}&rdquo;
-            </div>
-          )}
-        </div>
+        {/* ── Native Phrase Audition Box (Modular Subcomponent) ── */}
+        <VoiceAuditionBox
+          nativeText={greeting.native}
+          phonetics={greeting.phonetics}
+          englishText={greeting.english}
+        />
 
         {/* ── Audio Engine & Quality Metadata ── */}
         <div className="flex items-center justify-between text-sm text-slate-300 font-mono pt-1 font-medium">

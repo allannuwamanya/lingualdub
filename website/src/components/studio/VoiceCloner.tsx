@@ -110,21 +110,21 @@ export default function VoiceCloner() {
       aria-label="Voice Cloner Studio"
     >
       {/* ── Header Banner ── */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 sm:p-8 bg-[#101726] rounded-3xl shadow-xl">
-        <div className="flex items-start sm:items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-            <Dna className="w-7 h-7" />
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 sm:p-9 bg-[#101726] rounded-3xl shadow-xl">
+        <div className="flex items-start sm:items-center gap-5">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+            <Dna className="w-8 h-8" />
           </div>
           <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <div className="flex items-center gap-3.5 flex-wrap">
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                 Voice Cloner (.afrivoice)
               </h1>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 tracking-wide">
+              <span className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/15 text-indigo-300 uppercase tracking-wider">
                 Zero-Shot Timbre Transfer
               </span>
             </div>
-            <p className="text-sm sm:text-base text-slate-300 mt-1.5 leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-300 mt-2 leading-relaxed max-w-2xl">
               Extract 192-dimensional ECAPA speaker embeddings and compile encrypted portable voice containers with sovereign consent.
             </p>
           </div>
@@ -173,16 +173,16 @@ export default function VoiceCloner() {
         <button
           type="submit"
           disabled={isCloning || !cloneConsent || !cloneAudioFile || !cloneName.trim()}
-          className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl text-base flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-600/25 transition-all cursor-pointer disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="w-full h-16 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/25 transition-all cursor-pointer disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-indigo-500"
         >
           {isCloning ? (
             <>
-              <RefreshCw className="w-5 h-5 animate-spin" />
+              <RefreshCw className="w-6 h-6 animate-spin" />
               <span>Extracting & Packaging .afrivoice Profile...</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="w-6 h-6" />
               <span>Build .afrivoice Sovereign Package</span>
             </>
           )}

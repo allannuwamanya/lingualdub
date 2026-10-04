@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2 } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 export const CLONING_STEPS = [
   'Segmenting reference audio & computing energy VAD...',
@@ -21,20 +21,20 @@ export default function ClonerProgressPipeline({
     <div
       role="status"
       aria-live="polite"
-      className="p-6 bg-[#101726] rounded-3xl shadow-xl space-y-4"
+      className="p-7 bg-[#101726] rounded-3xl shadow-xl space-y-5"
     >
-      <div className="flex items-center justify-between text-sm text-indigo-300 font-semibold">
-        <span className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+      <div className="flex items-center justify-between text-base sm:text-lg text-indigo-200 font-bold">
+        <span className="flex items-center gap-2.5">
+          <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
           <span>Processing Voice Extraction Pipeline...</span>
         </span>
-        <span className="font-mono text-xs text-slate-400">
+        <span className="font-mono text-sm text-slate-300">
           Step {activeStepIndex + 1} of {CLONING_STEPS.length} ({percent}%)
         </span>
       </div>
 
       {/* Progress Track */}
-      <div className="w-full bg-[#070b14] h-2 rounded-full overflow-hidden">
+      <div className="w-full bg-[#070b14] h-3 rounded-full overflow-hidden">
         <div
           className="bg-indigo-500 h-full rounded-full transition-all duration-500"
           style={{ width: `${percent}%` }}
@@ -42,7 +42,7 @@ export default function ClonerProgressPipeline({
       </div>
 
       {/* Step Checklist */}
-      <div className="space-y-2 pt-1">
+      <div className="space-y-3 pt-1">
         {CLONING_STEPS.map((step, idx) => {
           const isDone = idx < activeStepIndex;
           const isCurrent = idx === activeStepIndex;
@@ -50,15 +50,15 @@ export default function ClonerProgressPipeline({
           return (
             <div
               key={idx}
-              className={`text-xs flex items-center gap-2.5 transition-colors ${
+              className={`text-sm sm:text-base flex items-center gap-3 transition-colors ${
                 isDone
-                  ? 'text-emerald-400 font-semibold'
+                  ? 'text-emerald-400 font-bold'
                   : isCurrent
-                  ? 'text-white font-bold animate-pulse'
+                  ? 'text-white font-extrabold animate-pulse'
                   : 'text-slate-600'
               }`}
             >
-              <span className="w-4 text-center font-mono">
+              <span className="w-5 text-center font-mono text-base">
                 {isDone ? '✓' : isCurrent ? '▶' : '○'}
               </span>
               <span>{step}</span>

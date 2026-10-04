@@ -25,18 +25,18 @@ export default function MasteringMetersCard({
   return (
     <div
       aria-label="Stereo VU Monitor and EBU R128 Telemetry"
-      className="bg-[#101726] rounded-3xl p-7 sm:p-8 shadow-xl space-y-6"
+      className="bg-[#101726] rounded-3xl p-7 sm:p-9 shadow-xl space-y-6"
     >
-      <div className="flex items-center justify-between border-b border-white/[0.05] pb-4">
-        <h2 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-400" />
+      <div className="flex items-center justify-between border-b border-white/[0.06] pb-5">
+        <h2 className="text-xl font-black text-white tracking-wide flex items-center gap-2.5">
+          <Activity className="w-5 h-5 text-indigo-400" />
           <span>Stereo VU Monitor</span>
         </h2>
         <span
-          className={`text-xs font-mono px-3 py-1 rounded-full font-semibold ${
+          className={`text-sm font-mono px-3.5 py-1 rounded-full font-bold ${
             isBypass
-              ? 'bg-amber-500/15 text-amber-300'
-              : 'bg-emerald-500/15 text-emerald-300'
+              ? 'bg-amber-500/20 text-amber-300'
+              : 'bg-emerald-500/20 text-emerald-300'
           }`}
         >
           {isBypass ? 'DRY SIGNAL' : 'WET (DSP)'}
@@ -44,16 +44,16 @@ export default function MasteringMetersCard({
       </div>
 
       {/* Dual VU Meters */}
-      <div className="space-y-4 bg-[#070b14] p-5 rounded-2xl">
+      <div className="space-y-5 bg-[#070b14] p-6 rounded-2xl">
         {/* Left Channel */}
         <div>
-          <div className="flex justify-between text-xs font-mono text-slate-400 mb-1.5">
+          <div className="flex justify-between text-sm font-mono text-slate-300 mb-2 font-medium">
             <span>CH L (Left)</span>
-            <span className="text-slate-200">{meterL > 88 ? '-0.1 dBTP' : '-3.2 dBTP'}</span>
+            <span className="text-white font-bold">{meterL > 88 ? '-0.1 dBTP' : '-3.2 dBTP'}</span>
           </div>
-          <div className="h-4 bg-black/60 rounded-md overflow-hidden p-0.5">
+          <div className="h-5 bg-black/60 rounded-lg overflow-hidden p-0.5">
             <div
-              className="h-full rounded bg-indigo-500 transition-all duration-75"
+              className="h-full rounded-md bg-indigo-500 transition-all duration-75"
               style={{ width: `${meterL}%` }}
             />
           </div>
@@ -61,25 +61,25 @@ export default function MasteringMetersCard({
 
         {/* Right Channel */}
         <div>
-          <div className="flex justify-between text-xs font-mono text-slate-400 mb-1.5">
+          <div className="flex justify-between text-sm font-mono text-slate-300 mb-2 font-medium">
             <span>CH R (Right)</span>
-            <span className="text-slate-200">{meterR > 88 ? '-0.2 dBTP' : '-3.4 dBTP'}</span>
+            <span className="text-white font-bold">{meterR > 88 ? '-0.2 dBTP' : '-3.4 dBTP'}</span>
           </div>
-          <div className="h-4 bg-black/60 rounded-md overflow-hidden p-0.5">
+          <div className="h-5 bg-black/60 rounded-lg overflow-hidden p-0.5">
             <div
-              className="h-full rounded bg-indigo-500 transition-all duration-75"
+              className="h-full rounded-md bg-indigo-500 transition-all duration-75"
               style={{ width: `${meterR}%` }}
             />
           </div>
         </div>
 
         {/* Gain Reduction Meter */}
-        <div className="pt-3 border-t border-white/[0.05]">
-          <div className="flex justify-between text-xs font-mono text-slate-400 mb-1.5">
+        <div className="pt-3 border-t border-white/[0.06]">
+          <div className="flex justify-between text-sm font-mono text-slate-300 mb-2 font-medium">
             <span>GAIN REDUCTION</span>
-            <span className="text-indigo-400 font-bold">-{gainReduction} dB</span>
+            <span className="text-indigo-400 font-extrabold">-{gainReduction} dB</span>
           </div>
-          <div className="h-2.5 bg-black/60 rounded-md overflow-hidden">
+          <div className="h-3.5 bg-black/60 rounded-lg overflow-hidden">
             <div
               className="h-full bg-indigo-400 transition-all duration-100 rounded"
               style={{ width: `${Math.min(100, (gainReduction / 6) * 100)}%` }}
@@ -90,26 +90,26 @@ export default function MasteringMetersCard({
 
       {/* Telemetry Summary */}
       {masterResults && (
-        <div className="bg-[#070b14] rounded-2xl p-5 space-y-2.5 text-xs font-mono">
-          <div className="text-indigo-300 font-bold mb-2 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        <div className="bg-[#070b14] rounded-2xl p-6 space-y-3 text-sm font-mono">
+          <div className="text-indigo-300 font-bold mb-3 flex items-center gap-2 text-base">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
             <span>EBU R128 Loudness Verification:</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-slate-300">
             <span>Integrated Loudness:</span>
             <span className="text-white font-bold">{masterResults.lufsIntegrated} LUFS</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-slate-300">
             <span>True Peak Max:</span>
-            <span className="text-white">{masterResults.peakDb} dBTP</span>
+            <span className="text-white font-bold">{masterResults.peakDb} dBTP</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-slate-300">
             <span>Dynamic Range (LRA):</span>
-            <span className="text-white">6.4 LU</span>
+            <span className="text-white font-bold">6.4 LU</span>
           </div>
-          <div className="flex justify-between text-slate-400 pt-2 border-t border-white/[0.05]">
+          <div className="flex justify-between text-slate-300 pt-3 border-t border-white/[0.06]">
             <span>Compliance:</span>
-            <span className="text-emerald-400 font-semibold">Broadcast & Streaming Pass</span>
+            <span className="text-emerald-400 font-bold">Broadcast & Streaming Pass</span>
           </div>
         </div>
       )}

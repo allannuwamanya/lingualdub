@@ -11,22 +11,22 @@ export default function ModelHubHeaderBanner({
   isRefreshing,
 }: ModelHubHeaderBannerProps) {
   return (
-    <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
-          <HardDrive className="w-6 h-6" />
+    <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-7 sm:p-9 bg-[#101726] rounded-3xl shadow-xl">
+      <div className="flex items-start sm:items-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+          <HardDrive className="w-8 h-8" />
         </div>
         <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <div className="flex items-center gap-3.5 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               Neural Model Hub
             </h1>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+            <span className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-indigo-500/15 text-indigo-300 uppercase tracking-wider">
               Edge Offline Inference
             </span>
           </div>
-          <p className="text-sm text-slate-400 mt-1">
-            Manage local INT8, GGUF, and CTranslate2 model weights for zero-bandwidth African speech pipelines.
+          <p className="text-base sm:text-lg text-slate-300 mt-2 leading-relaxed max-w-3xl">
+            Manage local INT8, GGUF, and CTranslate2 model weights for zero-bandwidth African speech and translation pipelines.
           </p>
         </div>
       </div>
@@ -35,9 +35,9 @@ export default function ModelHubHeaderBanner({
         type="button"
         onClick={onRefresh}
         disabled={isRefreshing}
-        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 rounded-xl text-sm font-semibold transition-colors cursor-pointer h-12 shrink-0 focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className="inline-flex items-center justify-center gap-2.5 h-13 px-6 bg-white/[0.08] hover:bg-white/[0.14] text-slate-100 hover:text-white rounded-2xl text-base font-bold transition-colors cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-indigo-500 self-start lg:self-center"
       >
-        <RefreshCw className={`w-4 h-4 text-indigo-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <RefreshCw className={`w-5 h-5 text-indigo-400 ${isRefreshing ? 'animate-spin' : ''}`} />
         <span>Refresh Local Registry</span>
       </button>
     </header>
