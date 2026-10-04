@@ -21,10 +21,13 @@ interface StudioAudioContextType {
   backendOnline: boolean;
   sunbirdApiKey: string;
   voices: VoiceOption[];
+  clonedVoices: VoiceOption[];
   notice: string | null;
   setNotice: (notice: string | null) => void;
 
   // Actions
+  addClonedVoice: (voice: VoiceOption) => void;
+  removeClonedVoice: (voiceId: string) => void;
   playTrack: (url: string, name: string, lang: string, engine: string) => void;
   togglePlayPause: () => void;
   replayAudio: () => void;
@@ -50,6 +53,42 @@ export function StudioAudioProvider({ children }: { children: ReactNode }) {
   const [backendOnline, setBackendOnline] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [voices, setVoices] = useState<VoiceOption[]>(PRESET_VOICES);
+
+  // Persistent Cloned Voices
+  const [clonedVoices, setClonedVoices] = useState<VoiceOption[]>(() => {
+    try {
+      const stored = localStorage.getItem('lingualdub_cloned_voices');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addClonedVoice = (voice: VoiceOption) => {
+    setClonedVoices((prev) => {
+      const filtered = prev.filter((v) => v.voice_id !== voice.voice_id);
+      const next = [{ ...voice, isCloned: true }, ...filtered];
+      try {
+        localStorage.setItem('lingualdub_cloned_voices', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    setVoices((prev) => {
+      const filtered = prev.filter((v) => v.voice_id !== voice.voice_id);
+      return [{ ...voice, isCloned: true }, ...filtered];
+    });
+  };
+
+  const removeClonedVoice = (voiceId: string) => {
+    setClonedVoices((prev) => {
+      const next = prev.filter((v) => v.voice_id !== voiceId);
+      try {
+        localStorage.setItem('lingualdub_cloned_voices', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    setVoices((prev) => prev.filter((v) => v.voice_id !== voiceId));
+  };
 
   // Active track state
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -390,8 +429,11 @@ export function StudioAudioProvider({ children }: { children: ReactNode }) {
         backendOnline,
         sunbirdApiKey,
         voices,
+        clonedVoices,
         notice,
         setNotice,
+        addClonedVoice,
+        removeClonedVoice,
         playTrack,
         togglePlayPause,
         replayAudio,

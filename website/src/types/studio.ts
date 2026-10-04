@@ -19,6 +19,9 @@ export interface VoiceOption {
   dialect?: string;
   country?: string;
   flag?: string;
+  isCloned?: boolean;
+  sampleRate?: string;
+  modelEngine?: string;
 }
 
 export interface HardwareInfo {
