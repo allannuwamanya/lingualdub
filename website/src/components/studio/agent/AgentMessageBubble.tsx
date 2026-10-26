@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Volume2, Copy, Check } from 'lucide-react';
 import type { ChatMessage } from '../../../types/studio';
 

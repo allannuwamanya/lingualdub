@@ -1,4 +1,3 @@
-import React from 'react';
 import { Play, Pause, RotateCcw, Square, Volume2, VolumeX, Download } from 'lucide-react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
 import { formatTime } from '../../types/studio';

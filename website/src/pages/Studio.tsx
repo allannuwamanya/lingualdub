@@ -1,4 +1,3 @@
-import React from 'react';
 import type { StudioTab } from '../types/studio';
 import { StudioAudioProvider, useStudioAudio } from '../context/StudioAudioContext';
 import SpeechLab from '../components/studio/SpeechLab';

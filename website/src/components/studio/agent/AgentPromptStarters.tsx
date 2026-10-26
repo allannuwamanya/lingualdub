@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { PROMPT_STARTERS } from './agentData';
 

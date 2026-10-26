@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
-import { MASTERING_PRESETS } from './mastering/masteringData';
 import type { MasteringPreset } from './mastering/masteringData';
 import MasteringHeaderBanner from './mastering/MasteringHeaderBanner';
 import MasteringPresetsBar from './mastering/MasteringPresetsBar';
@@ -8,7 +7,7 @@ import MasteringControlsCard from './mastering/MasteringControlsCard';
 import MasteringMetersCard from './mastering/MasteringMetersCard';
 
 export default function MasteringRack() {
-  const { audioUrl, isPlaying, togglePlayPause, playTrack } = useStudioAudio();
+  const { audioUrl, isPlaying, togglePlayPause } = useStudioAudio();
 
   const [targetLufs, setTargetLufs] = useState(-14);
   const [duckRatio, setDuckRatio] = useState(-12);

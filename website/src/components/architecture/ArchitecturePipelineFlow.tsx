@@ -1,4 +1,3 @@
-import React from 'react';
 
 const PIPELINE_STEPS = [
   { label: 'LANGUAGE & RESOURCES', sub: 'Language metadata, dialect profiles, phoneme inventories, and consent-verified speech/text assets.' },

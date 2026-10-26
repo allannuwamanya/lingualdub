@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clock, Gauge, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface DubbingTimingHUDProps {

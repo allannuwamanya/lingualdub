@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Dna } from 'lucide-react';
 import { useStudioAudio } from '../../context/StudioAudioContext';

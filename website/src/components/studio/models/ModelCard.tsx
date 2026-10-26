@@ -1,4 +1,3 @@
-import React from 'react';
 import { Download, Trash2, CheckCircle2, RefreshCw } from 'lucide-react';
 import type { ModelItem } from '../../../types/studio';
 

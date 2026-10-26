@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, ArrowRight, Activity, Sparkles, Trash2 } from 'lucide-react';
 import type { VoiceOption } from '../../../types/studio';

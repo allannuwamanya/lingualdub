@@ -1,4 +1,3 @@
-import React from 'react';
 import { Mic, MicOff, Send, StopCircle } from 'lucide-react';
 import { NATIVE_LANG_NAMES } from '../../../types/studio';
 

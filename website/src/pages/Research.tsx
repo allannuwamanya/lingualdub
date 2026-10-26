@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Clock, Infinity, Shield, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
 import { SUNBIRD_KEY_STORAGE, SUNBIRD_KEY_EVENT } from '../../lib/config';
 import SettingsHeaderBanner from './settings/SettingsHeaderBanner';
@@ -107,13 +107,23 @@ export default function EngineSettings() {
       const res = await fetch('/v1/health');
       const latency = Math.round(performance.now() - start);
 
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
+      // Static hosts rewrite unknown paths to index.html with a 200, so only a
+      // JSON body reporting status "ok" counts as a live backend.
+      const isJson = (res.headers.get('content-type') || '').includes('application/json');
+      const data = res.ok && isJson ? await res.json().catch(() => ({})) : {};
+
+      if (data.status === 'ok') {
         setBackendProbeResult({
           ok: true,
           latencyMs: latency,
           version: data.version || '0.1.0',
           message: `Local LingualDub Python Daemon on :8000 is healthy (${latency}ms).`,
+        });
+      } else if (res.ok) {
+        setBackendProbeResult({
+          ok: false,
+          latencyMs: latency,
+          message: 'Local server not reached on :8000. Running in client-side fallback mode.',
         });
       } else {
         setBackendProbeResult({

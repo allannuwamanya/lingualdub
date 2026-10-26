@@ -1,4 +1,3 @@
-import React from 'react';
 
 const STATS = [
   { value: '51+', label: 'African Languages' },

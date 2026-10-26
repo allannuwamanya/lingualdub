@@ -1,4 +1,3 @@
-import React from 'react';
 import { Cpu, RefreshCw } from 'lucide-react';
 
 interface SettingsHeaderBannerProps {
