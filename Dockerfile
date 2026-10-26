@@ -19,9 +19,11 @@ ENV PYTHONUNBUFFERED=1 \
     HOST=0.0.0.0 \
     LINGUALDUB_CACHE_DIR=/app/data/cache
 
-# Install system dependencies (curl for healthcheck, libsndfile for audio)
+# Install system dependencies (curl for healthcheck, libsndfile for audio,
+# ffmpeg for video dubbing, time-stretching and A/V muxing)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    ffmpeg \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
