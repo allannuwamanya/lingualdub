@@ -168,9 +168,37 @@ def test_scan_discovers_with_empty_string_in_sys_path(monkeypatch, tmp_path):
     """Ensure scanner finds manifests in current directory when sys.path has ''."""
     _write_manifest(tmp_path, VALID_MANIFEST)
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr("sys.path", ["", "/nonexistent/dir"])
+    monkeypatch.setattr("sys.path", ["", "/nonexistent/dir", *_sys_path_without_repo()])
     registry = Registry()
     scanner = ManifestScanner(registry)
     count = scanner.scan()
-    assert count == 1
+    # The tmp manifest plus the package's built-in one, which is always scanned
+    assert count == 1 + _builtin_entry_count()
     assert registry.resolve("component", "pathlib_path") is Path
+
+
+def _builtin_entry_count() -> int:
+    import lingualdub
+
+    manifest = Path(lingualdub.__file__).parent / MANIFEST_FILENAME
+    return len(json.loads(manifest.read_text(encoding="utf-8"))["entries"])
+
+
+def _sys_path_without_repo() -> list[str]:
+    """sys.path minus the repo root (and cwd), keeping the stdlib importable."""
+    import sys
+
+    import lingualdub
+
+    repo_root = Path(lingualdub.__file__).resolve().parent.parent
+    return [p for p in sys.path if p and p != "." and Path(p).resolve() != repo_root]
+
+
+def test_scan_finds_builtin_manifest_when_package_not_on_sys_path(monkeypatch, tmp_path):
+    """Editable installs import lingualdub via a finder, not a sys.path entry."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.path", _sys_path_without_repo())
+    registry = Registry()
+    count = ManifestScanner(registry).scan()
+    assert count == _builtin_entry_count()
+    assert registry.resolve("component", "sunbird_asr") is not None

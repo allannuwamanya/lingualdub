@@ -648,9 +648,19 @@ def cmd_dub(args: argparse.Namespace) -> int:
             elif art.endswith(".srt"):
                 subtitles_file = art
 
-    if dubbed_video:
+    # Components write into their own temp dirs; copy deliverables into out_dir
+    import shutil
+
+    target = pipeline.target_language or args.target
+    if dubbed_video and Path(dubbed_video).is_file():
+        dubbed_video = str(
+            shutil.copy2(dubbed_video, out_dir / f"{video_path.stem}_dubbed_{target}.mp4")
+        )
         logger.info("✓ Dubbed video generated: %s", dubbed_video)
-    if subtitles_file:
+    if subtitles_file and Path(subtitles_file).is_file():
+        subtitles_file = str(
+            shutil.copy2(subtitles_file, out_dir / f"{video_path.stem}_{target}.srt")
+        )
         logger.info("✓ Subtitles generated: %s", subtitles_file)
 
     # Save results json

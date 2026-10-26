@@ -126,9 +126,12 @@ LingualDub uses **GitHub as the bridge** between local development and cloud GPU
 
 ```bash
 # 1. End-to-End Video Dubbing (Extracts audio, translates, synthesizes, and muxes subtitles)
-lingualdub dub input_video.mp4 \
-  --target-lang lug \
-  --output dubbed_video.mp4 \
+#    Writes input_video_dubbed_lug.mp4, input_video_lug.srt and results.json to --output-dir.
+#    Requires ffmpeg on PATH.
+lingualdub dub --input-video input_video.mp4 \
+  --source eng \
+  --target lug \
+  --output-dir dubbed/ \
   --mock  # Remove --mock to run full neural pipeline
 
 # 2. Inspect registered components and languages
