@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { HardwareInfo, VoiceOption } from '../types/studio';
 import { readSunbirdKey, SUNBIRD_KEY_EVENT } from '../lib/config';
 import { useAudioPlayback } from './useAudioPlayback';
@@ -99,11 +100,11 @@ export function StudioAudioProvider({ children }: { children: ReactNode }) {
       voice,
       sunbirdApiKey,
       playTrack: playback.playTrack,
-      speakFallback: () => {
+      speakFallback: (sampleText) => {
         playback.setAudioTrackName(`${voice.name} (${voice.dialect || voice.language})`);
         playback.setAudioTrackLang(voice.language);
         playback.setAudioTrackEngine('Browser Voice');
-        speakBrowserVoice(voice.language, voice.gender, 1.0);
+        speakBrowserVoice(sampleText, voice.language, voice.gender, 1.0);
       },
     });
   };

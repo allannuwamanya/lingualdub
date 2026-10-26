@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { BookOpen, ExternalLink, ArrowLeft, X } from 'lucide-react';
 import TopLoadingBar from './TopLoadingBar';

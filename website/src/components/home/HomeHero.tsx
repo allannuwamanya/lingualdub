@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, BookOpen } from 'lucide-react';
 import GithubIcon from '../GithubIcon';

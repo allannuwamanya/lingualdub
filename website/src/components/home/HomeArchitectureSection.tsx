@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { Cpu, CheckCircle2, ArrowRight } from 'lucide-react';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { HardDrive, RefreshCw } from 'lucide-react';
 
 interface ModelHubHeaderBannerProps {

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Cpu } from 'lucide-react';
 import type { HardwareInfo } from '../../../types/studio';
 

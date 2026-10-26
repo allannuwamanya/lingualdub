@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Wrangler local dev state (pages dev / miniflare)
+.wrangler

@@ -1,4 +1,3 @@
-import React from 'react';
 import GithubIcon from '../components/GithubIcon';
 import ArchitecturePipelineFlow from '../components/architecture/ArchitecturePipelineFlow';
 import ArchitectureRepoBlueprint from '../components/architecture/ArchitectureRepoBlueprint';

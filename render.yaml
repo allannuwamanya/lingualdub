@@ -18,5 +18,7 @@ services:
         generateValue: true
       - key: LINGUALDUB_RATE_LIMIT
         value: 120
+      - key: LINGUALDUB_TRUST_PROXY
+        value: "1"
       - key: LINGUALDUB_CACHE_DIR
         value: /app/data/cache

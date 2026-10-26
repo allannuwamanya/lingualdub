@@ -1,4 +1,3 @@
-import React from 'react';
 import { Activity, ShieldCheck } from 'lucide-react';
 
 interface MasteringMetersCardProps {

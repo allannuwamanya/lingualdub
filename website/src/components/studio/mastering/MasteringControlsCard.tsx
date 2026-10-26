@@ -1,4 +1,3 @@
-import React from 'react';
 import { Zap, Play, Pause, RefreshCw } from 'lucide-react';
 
 interface MasteringControlsCardProps {

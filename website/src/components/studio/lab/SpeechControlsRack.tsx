@@ -1,4 +1,3 @@
-import React from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import type { VoiceOption } from '../../../types/studio';
 import CustomSelect, { type SelectOption } from '../CustomSelect';

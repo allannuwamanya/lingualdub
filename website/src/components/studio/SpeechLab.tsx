@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useStudioAudio } from '../../context/StudioAudioContext';
 import { LANGUAGE_SAMPLES, PRESET_VOICES } from '../../types/studio';
@@ -126,7 +126,6 @@ export default function SpeechLab() {
           <SpeechScriptEditor
             speechText={speechText}
             onSpeechTextChange={setSpeechText}
-            selectedLang={selectedLang}
             pacingSpeed={pacingSpeed}
             isSynthesizing={isSynthesizing}
             onSynthesize={handleSynthesize}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
 import { LANGUAGE_SAMPLES } from '../../types/studio';
 import DubbingHeaderBanner from './dubbing/DubbingHeaderBanner';

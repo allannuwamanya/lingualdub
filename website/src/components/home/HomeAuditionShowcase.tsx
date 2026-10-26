@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Radio, Play, Pause } from 'lucide-react';
 
 const SAMPLE_VOICES = [

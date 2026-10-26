@@ -1,4 +1,3 @@
-import React from 'react';
 import CustomSelect, { type SelectOption } from '../CustomSelect';
 import { AFRICAN_LANGUAGE_GROUPS } from '../lab/labConfig';
 

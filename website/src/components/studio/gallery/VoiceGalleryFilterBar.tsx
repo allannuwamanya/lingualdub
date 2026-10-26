@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, X, RotateCcw } from 'lucide-react';
 import { REGION_TABS } from './galleryData';
 import type { RegionFilterId } from './galleryData';

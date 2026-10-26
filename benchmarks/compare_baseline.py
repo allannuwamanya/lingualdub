@@ -24,8 +24,21 @@ import sys
 from pathlib import Path
 
 
+def normalize_name(name: str) -> str:
+    """Canonicalise a benchmark id to dotted form.
+
+    pytest-benchmark emits ``benchmarks/bench_x.py::test_y`` while older
+    baselines use ``benchmarks.bench_x.test_y``; both map to the latter.
+    """
+    if "::" in name:
+        path, _, test = name.partition("::")
+        module = path.removesuffix(".py").replace("\\", "/").replace("/", ".")
+        return f"{module}.{test}"
+    return name
+
+
 def load_means(path: Path) -> dict[str, float]:
-    """Map benchmark fullname -> mean seconds from a pytest-benchmark JSON file."""
+    """Map normalised benchmark name -> mean seconds from a pytest-benchmark JSON file."""
     data = json.loads(path.read_text(encoding="utf-8"))
     means: dict[str, float] = {}
     for entry in data.get("benchmarks", []):
@@ -33,7 +46,7 @@ def load_means(path: Path) -> dict[str, float]:
         stats = entry.get("stats") or {}
         mean = stats.get("mean")
         if name and mean is not None:
-            means[name] = float(mean)
+            means[normalize_name(name)] = float(mean)
     return means
 
 
@@ -70,6 +83,13 @@ def main(argv: list[str] | None = None) -> int:
 
     regressions: list[str] = []
     missing = sorted(set(current) - set(baseline))
+    if not set(current) & set(baseline):
+        print(
+            "ERROR: no benchmark in the current run matches the baseline; "
+            "the baseline is stale or uses incompatible names.",
+            file=sys.stderr,
+        )
+        return 2
 
     for name, cur_mean in sorted(current.items()):
         base_mean = baseline.get(name)

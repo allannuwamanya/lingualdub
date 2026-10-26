@@ -62,7 +62,7 @@ export async function auditionVoiceService({
   voice: VoiceOption;
   sunbirdApiKey: string;
   playTrack: (url: string, name: string, lang: string, engine: string) => void;
-  speakFallback: () => void;
+  speakFallback: (text: string) => void;
 }) {
   const sampleText = LANGUAGE_SAMPLES[voice.language] || `Hello, my name is ${voice.name}.`;
   const trackEngine = sunbirdApiKey ? 'Sunbird AI (Uganda)' : 'Sherpa MMS-TTS';
@@ -98,7 +98,7 @@ export async function auditionVoiceService({
   }
 
   // 3. Fallback to Web Speech API
-  speakFallback();
+  speakFallback(sampleText);
 }
 
 export async function synthesizeAudioTrackService({

@@ -142,6 +142,10 @@ def test_cli_dub_mock_pipeline(tmp_path):
     assert any(a.endswith(".mp4") for a in data["artifacts"])
     assert any(a.endswith(".srt") for a in data["artifacts"])
 
+    # Deliverables are copied into the requested output directory
+    assert (out_dir / "test_input_dubbed_lug.mp4").is_file()
+    assert (out_dir / "test_input_lug.srt").is_file()
+
 
 def test_cli_dub_with_config(tmp_path):
     vid_file = tmp_path / "test_input2.mp4"

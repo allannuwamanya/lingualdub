@@ -1,4 +1,3 @@
-import React from 'react';
 import HomeHero from '../components/home/HomeHero';
 import HomeAuditionShowcase from '../components/home/HomeAuditionShowcase';
 import HomeStatsStrip from '../components/home/HomeStatsStrip';

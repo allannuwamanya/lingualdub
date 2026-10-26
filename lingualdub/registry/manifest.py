@@ -396,8 +396,11 @@ class ManifestScanner:
         if search_paths is not None:
             paths = [Path(p).resolve() for p in search_paths]
         else:
-            # Build search paths from sys.path; empty string means cwd
-            paths = []
+            # Always include this package's own directory so the built-in manifest
+            # is found even when it is not under sys.path (editable installs load
+            # the package through an import finder, not a sys.path entry).
+            paths = [Path(__file__).resolve().parent.parent]
+            # Then build search paths from sys.path; empty string means cwd
             for p in sys.path:
                 resolved = Path.cwd().resolve() if not p or p == "." else Path(p).resolve()
                 if resolved.is_dir() and resolved not in paths:
