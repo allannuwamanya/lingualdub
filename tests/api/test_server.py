@@ -192,3 +192,73 @@ def test_server_bearer_token_auth(monkeypatch):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_server_static_and_unknown_api_routes(monkeypatch, tmp_path):
+    import http.client
+
+    from lingualdub.api.server import LingualDubRequestHandler
+
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<!doctype html><title>spa</title>")
+    (tmp_path / "secret.txt").write_text("top-secret")
+    monkeypatch.setattr(LingualDubRequestHandler, "static_dir", dist)
+
+    server = create_server(host="127.0.0.1", port=0)
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    def get(path: str) -> tuple[int, str, bytes]:
+        # http.client sends the path verbatim, so "../" segments reach the server
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        try:
+            conn.request("GET", path)
+            resp = conn.getresponse()
+            return resp.status, resp.getheader("Content-Type") or "", resp.read()
+        finally:
+            conn.close()
+
+    try:
+        # /v1/health is served as JSON (the studio's backend probe calls it)
+        status, ctype, body = get("/v1/health")
+        assert status == 200
+        assert ctype == "application/json"
+        assert json.loads(body)["status"] == "ok"
+
+        # Unknown API routes return a JSON 404 rather than the SPA shell
+        status, ctype, _ = get("/v1/does-not-exist")
+        assert status == 404
+        assert ctype == "application/json"
+
+        # Client-side routes still fall back to index.html
+        status, _, body = get("/studio")
+        assert status == 200
+        assert b"spa" in body
+
+        # Path traversal must not escape the static directory
+        status, _, body = get("/../secret.txt")
+        assert b"top-secret" not in body
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_client_ip_ignores_forwarded_header_unless_proxy_trusted(monkeypatch):
+    from email.message import Message
+
+    from lingualdub.api.server import LingualDubRequestHandler
+
+    handler = LingualDubRequestHandler.__new__(LingualDubRequestHandler)
+    handler.client_address = ("10.0.0.5", 54321)
+    handler.headers = Message()
+    handler.headers["X-Forwarded-For"] = "1.2.3.4, 203.0.113.9"
+
+    # Untrusted by default: a spoofed header must not change the rate-limit key
+    monkeypatch.delenv("LINGUALDUB_TRUST_PROXY", raising=False)
+    assert handler._get_client_ip() == "10.0.0.5"
+
+    # Behind a trusted proxy, use the entry that proxy appended (rightmost)
+    monkeypatch.setenv("LINGUALDUB_TRUST_PROXY", "1")
+    assert handler._get_client_ip() == "203.0.113.9"

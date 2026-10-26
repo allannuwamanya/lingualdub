@@ -10,6 +10,7 @@ Uses Python standard library http.server, requiring zero additional runtime depe
 from __future__ import annotations
 
 import collections
+import hmac
 import json
 import logging
 import os
@@ -60,11 +61,16 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         max_requests=int(os.environ.get("LINGUALDUB_RATE_LIMIT", "120")),
         window_sec=60.0,
     )
+    static_dir: Path = Path(__file__).resolve().parent.parent.parent / "website" / "dist"
 
     def _get_client_ip(self) -> str:
-        forwarded = self.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        # X-Forwarded-For is client-controlled unless a reverse proxy sets it, so
+        # it is only honoured when LINGUALDUB_TRUST_PROXY is enabled. The rightmost
+        # entry is the address the trusted proxy saw; earlier ones can be spoofed.
+        if os.environ.get("LINGUALDUB_TRUST_PROXY", "").lower() in ("1", "true", "yes"):
+            forwarded = self.headers.get("X-Forwarded-For")
+            if forwarded:
+                return forwarded.split(",")[-1].strip()
         return self.client_address[0] if self.client_address else "127.0.0.1"
 
     def _is_authenticated(self) -> bool:
@@ -73,7 +79,7 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
             return True
         auth_header = self.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            return auth_header[7:].strip() == expected
+            return hmac.compare_digest(auth_header[7:].strip().encode(), expected.encode())
         return False
 
     def _send_cors_headers(self) -> None:
@@ -112,7 +118,7 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         return True
 
     def do_GET(self) -> None:  # noqa: N802
-        if self.path == "/health":
+        if self.path in ("/health", "/v1/health"):
             self._send_json(200, {"status": "ok", "platform": "lingualdub", "version": "0.1.0"})
             return
 
@@ -140,14 +146,18 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"models": models})
             return
 
-        # Serve compiled modern web application (website/dist)
-        from pathlib import Path
+        # Unknown API routes must not fall through to the SPA's index.html
+        if self.path.startswith("/v1/"):
+            self._send_json(404, {"error": "Endpoint not found"})
+            return
 
-        dist_dir = Path(__file__).resolve().parent.parent.parent / "website" / "dist"
+        # Serve compiled modern web application (website/dist)
+        dist_dir = self.static_dir.resolve()
         if dist_dir.is_dir():
             clean_path = self.path.split("?")[0].lstrip("/")
-            candidate = dist_dir / clean_path
-            if candidate.is_file():
+            candidate = (dist_dir / clean_path).resolve()
+            # Reject path traversal (e.g. "/../../etc/passwd") outside dist_dir
+            if candidate.is_relative_to(dist_dir) and candidate.is_file():
                 self._serve_static_file(candidate)
                 return
             # SPA Fallback for client-side routing (/studio, /docs, etc.)
