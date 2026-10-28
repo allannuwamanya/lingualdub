@@ -1,4 +1,3 @@
-import React from 'react';
 import { Radio, Zap, Sparkles, StopCircle } from 'lucide-react';
 
 interface AgentHeaderBannerProps {

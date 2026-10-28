@@ -1,4 +1,3 @@
-import React from 'react';
 import { Film, Sparkles, Trash2 } from 'lucide-react';
 
 interface DubbingHeaderBannerProps {

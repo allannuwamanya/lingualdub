@@ -10,11 +10,13 @@ Uses Python standard library http.server, requiring zero additional runtime depe
 from __future__ import annotations
 
 import collections
+import hmac
 import json
 import logging
 import os
 import threading
 import time
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
@@ -22,6 +24,24 @@ from typing import Any
 from lingualdub.api.routes import SpeechAPIHandler
 
 logger = logging.getLogger(__name__)
+
+MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024
+STATIC_DIST_DIR = Path(__file__).resolve().parent.parent.parent / "website" / "dist"
+
+
+def resolve_static_file(dist_dir: Path, request_path: str) -> Path | None:
+    """Resolve a URL path to a file inside ``dist_dir``, blocking traversal."""
+    try:
+        clean = urllib.parse.unquote(request_path.split("?", 1)[0]).lstrip("/")
+        if not clean:
+            return None
+        root = dist_dir.resolve()
+        candidate = (root / clean).resolve()
+        if candidate != root and root not in candidate.parents:
+            return None
+        return candidate if candidate.is_file() else None
+    except (OSError, ValueError):
+        return None
 
 
 class RateLimiter:
@@ -73,7 +93,7 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
             return True
         auth_header = self.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            return auth_header[7:].strip() == expected
+            return hmac.compare_digest(auth_header[7:].strip(), expected)
         return False
 
     def _send_cors_headers(self) -> None:
@@ -141,17 +161,13 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
             return
 
         # Serve compiled modern web application (website/dist)
-        from pathlib import Path
-
-        dist_dir = Path(__file__).resolve().parent.parent.parent / "website" / "dist"
-        if dist_dir.is_dir():
-            clean_path = self.path.split("?")[0].lstrip("/")
-            candidate = dist_dir / clean_path
-            if candidate.is_file():
+        if STATIC_DIST_DIR.is_dir():
+            candidate = resolve_static_file(STATIC_DIST_DIR, self.path)
+            if candidate is not None:
                 self._serve_static_file(candidate)
                 return
             # SPA Fallback for client-side routing (/studio, /docs, etc.)
-            index_file = dist_dir / "index.html"
+            index_file = STATIC_DIST_DIR / "index.html"
             if index_file.is_file():
                 self._serve_static_file(index_file)
                 return
@@ -159,7 +175,18 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
         self._send_json(404, {"error": "Endpoint not found"})
 
     def do_POST(self) -> None:  # noqa: N802
-        content_len = int(self.headers.get("Content-Length", 0))
+        try:
+            content_len = int(self.headers.get("Content-Length", 0))
+        except (TypeError, ValueError):
+            self._send_json(400, {"error": "Invalid Content-Length"})
+            return
+        if content_len < 0:
+            self._send_json(400, {"error": "Invalid Content-Length"})
+            return
+        if content_len > MAX_REQUEST_BODY_BYTES:
+            self._send_json(413, {"error": "Request body too large"})
+            return
+
         post_body = self.rfile.read(content_len) if content_len > 0 else b"{}"
 
         try:
@@ -186,6 +213,8 @@ class LingualDubRequestHandler(BaseHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(audio_bytes)))
                 self.end_headers()
                 self.wfile.write(audio_bytes)
+            except ValueError as exc:
+                self._send_json(400, {"error": str(exc)})
             except Exception as exc:
                 logger.error("Synthesis failed: %s", exc)
                 self._send_json(500, {"error": str(exc)})

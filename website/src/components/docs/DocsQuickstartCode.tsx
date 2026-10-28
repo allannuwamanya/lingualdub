@@ -1,4 +1,3 @@
-import React from 'react';
 import { Code2, Cpu, Layers, FileCode2 } from 'lucide-react';
 
 const HIGHLIGHTS = [

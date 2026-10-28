@@ -1,4 +1,3 @@
-import React from 'react';
 import { RefreshCw } from 'lucide-react';
 
 export const CLONING_STEPS = [

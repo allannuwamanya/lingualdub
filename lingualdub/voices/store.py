@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from lingualdub.voices.pack import VoiceMetadata, VoicePack
+from lingualdub.voices.pack import VoiceMetadata, VoicePack, validate_voice_id
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,17 @@ class VoiceStore:
 
     def __init__(self, root_dir: str | Path | None = None) -> None:
         self.root_dir = Path(root_dir) if root_dir else DEFAULT_VOICE_STORE_DIR
-        self.root_dir.mkdir(parents=True, exist_ok=True)
         self._index: dict[str, VoiceMetadata] = {}
         self.refresh()
+
+    def _path_for(self, voice_id: str) -> Path:
+        """Resolve a voice pack path, ensuring it stays inside ``root_dir``."""
+        validate_voice_id(voice_id)
+        candidate = (self.root_dir / f"{voice_id}.afrivoice").resolve()
+        root = self.root_dir.resolve()
+        if candidate.parent != root:
+            raise ValueError(f"Voice path escapes store root: {voice_id!r}")
+        return candidate
 
     def refresh(self) -> None:
         """Scan disk and update metadata index."""
@@ -40,21 +48,22 @@ class VoiceStore:
 
     def save(self, pack: VoicePack) -> Path:
         """Save a VoicePack into the store directory."""
-        target_path = self.root_dir / f"{pack.voice_id}.afrivoice"
+        self.root_dir.mkdir(parents=True, exist_ok=True)
+        target_path = self._path_for(pack.voice_id)
         pack.save(target_path)
         self._index[pack.voice_id] = pack.metadata
         return target_path
 
     def get(self, voice_id: str) -> VoicePack | None:
         """Retrieve a full VoicePack by voice ID."""
-        target_path = self.root_dir / f"{voice_id}.afrivoice"
+        target_path = self._path_for(voice_id)
         if not target_path.exists():
             return None
         return VoicePack.load(target_path)
 
     def delete(self, voice_id: str) -> bool:
         """Remove a VoicePack from the store."""
-        target_path = self.root_dir / f"{voice_id}.afrivoice"
+        target_path = self._path_for(voice_id)
         if target_path.exists():
             target_path.unlink()
             self._index.pop(voice_id, None)

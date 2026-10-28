@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dna, RefreshCw, Sparkles } from 'lucide-react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
+import { apiFetch } from '../../lib/api';
 import ClonerIdentityForm from './cloner/ClonerIdentityForm';
 import ClonerAudioInput from './cloner/ClonerAudioInput';
 import ClonerConsentCard from './cloner/ClonerConsentCard';
@@ -56,7 +57,7 @@ export default function VoiceCloner() {
       let assignedId = `clone_${Date.now()}`;
 
       try {
-        const res = await fetch('/v1/voices/clone', {
+        const res = await apiFetch('/v1/voices/clone', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

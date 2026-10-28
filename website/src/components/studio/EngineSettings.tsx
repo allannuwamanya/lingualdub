@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
 import { SUNBIRD_KEY_STORAGE, SUNBIRD_KEY_EVENT } from '../../lib/config';
 import SettingsHeaderBanner from './settings/SettingsHeaderBanner';
@@ -104,7 +104,7 @@ export default function EngineSettings() {
     const start = performance.now();
 
     try {
-      const res = await fetch('/v1/health');
+      const res = await fetch('/health');
       const latency = Math.round(performance.now() - start);
 
       if (res.ok) {

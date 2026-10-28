@@ -8,6 +8,7 @@ API request handlers for OpenAI & ElevenLabs-compatible speech endpoints.
 from __future__ import annotations
 
 import logging
+import math
 import os
 from typing import Any
 
@@ -16,7 +17,7 @@ from lingualdub.components.tts.shared import write_dummy_wav
 from lingualdub.core.result import Result
 from lingualdub.core.segment import Segment
 from lingualdub.voices.gallery import get_preset_voice, list_presets
-from lingualdub.voices.pack import VoicePack
+from lingualdub.voices.pack import VoicePack, VoicePackError
 from lingualdub.voices.store import VoiceStore
 
 logger = logging.getLogger(__name__)
@@ -45,18 +46,30 @@ class SpeechAPIHandler:
         Returns:
             Tuple of (audio_bytes, content_type).
         """
-        text = payload.get("input", "").strip()
+        raw_text = payload.get("input", "")
+        if not isinstance(raw_text, str):
+            raise ValueError("Input text must be a string.")
+        text = raw_text.strip()
         if not text:
             raise ValueError("Input text cannot be empty.")
 
-        voice_id = payload.get("voice", "kigozi_lug")
+        voice_id = str(payload.get("voice", "kigozi_lug"))
         api_key = payload.get("api_key") or os.environ.get("SUNBIRD_API_KEY")
-        model = payload.get("model", "sunbird" if api_key else "dummy").lower()
-        speed = float(payload.get("speed", 1.0))
-        language = payload.get("language", "lug")
+        model = str(payload.get("model", "sunbird" if api_key else "dummy")).lower()
+        try:
+            speed = float(payload.get("speed", 1.0))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("speed must be a positive number.") from exc
+        if not math.isfinite(speed) or speed <= 0:
+            raise ValueError("speed must be a positive number.")
+        language = str(payload.get("language", "lug"))
 
         # Resolve voice pack or preset for consent and timbre
-        voice_pack: VoicePack | None = self.voice_store.get(voice_id)
+        try:
+            voice_pack: VoicePack | None = self.voice_store.get(voice_id)
+        except (VoicePackError, ValueError):
+            logger.debug("Ignoring invalid voice id %r", voice_id)
+            voice_pack = None
         if not voice_pack:
             try:
                 voice_pack = get_preset_voice(voice_id)
@@ -235,9 +248,12 @@ class SpeechAPIHandler:
         from lingualdub.core.result import Result
         from lingualdub.core.segment import Segment
 
-        text = payload.get("text", "").strip()
-        src = payload.get("source_language") or payload.get("source_lang", "eng")
-        tgt = payload.get("target_language") or payload.get("target_lang", "lug")
+        raw_text = payload.get("text", "")
+        if not isinstance(raw_text, str):
+            raise ValueError("Text must be a string.")
+        text = raw_text.strip()
+        src = str(payload.get("source_language") or payload.get("source_lang", "eng"))
+        tgt = str(payload.get("target_language") or payload.get("target_lang", "lug"))
         if not text:
             raise ValueError("Text cannot be empty.")
 
@@ -250,14 +266,21 @@ class SpeechAPIHandler:
 
                 client = SunbirdClient(api_key=api_key)
                 sunbird_res = client.translate(text=text, source_language=src, target_language=tgt)
-                if isinstance(sunbird_res, dict) and "translated_text" in sunbird_res:
-                    return {
-                        "source_language": src,
-                        "target_language": tgt,
-                        "original_text": text,
-                        "translated_text": sunbird_res["translated_text"],
-                        "engine": "sunbird_cloud",
-                    }
+                if isinstance(sunbird_res, dict):
+                    output = sunbird_res.get("output")
+                    translated = sunbird_res.get("translated_text")
+                    if not translated and isinstance(output, dict):
+                        translated = output.get("translated_text")
+                    if not translated:
+                        translated = sunbird_res.get("text")
+                    if isinstance(translated, str) and translated.strip():
+                        return {
+                            "source_language": src,
+                            "target_language": tgt,
+                            "original_text": text,
+                            "translated_text": translated.strip(),
+                            "engine": "sunbird_cloud",
+                        }
             except Exception as exc:
                 logger.debug("Sunbird translation fallback: %s", exc)
 

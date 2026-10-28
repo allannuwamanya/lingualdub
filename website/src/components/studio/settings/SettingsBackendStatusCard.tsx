@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
 interface SettingsBackendStatusCardProps {
@@ -30,7 +29,7 @@ export default function SettingsBackendStatusCard({
       <div>
         <strong className="block font-bold text-white">{result.message}</strong>
         <span className="text-xs text-slate-300 font-mono mt-1 block">
-          Roundtrip: {result.latencyMs}ms • Endpoint: http://127.0.0.1:8000/v1/health
+          Roundtrip: {result.latencyMs}ms • Endpoint: /health
         </span>
       </div>
     </div>

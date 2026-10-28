@@ -1,4 +1,3 @@
-import React from 'react';
 import AgentHeaderBanner from './agent/AgentHeaderBanner';
 import AgentDialectBar from './agent/AgentDialectBar';
 import AgentTranscriptView from './agent/AgentTranscriptView';

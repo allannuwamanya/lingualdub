@@ -4,7 +4,6 @@ import { Volume2, RefreshCw, Wand2, Trash2 } from 'lucide-react';
 interface SpeechScriptEditorProps {
   speechText: string;
   onSpeechTextChange: (text: string) => void;
-  selectedLang: string;
   pacingSpeed: number;
   isSynthesizing: boolean;
   onSynthesize: () => void;
@@ -16,7 +15,6 @@ interface SpeechScriptEditorProps {
 export default function SpeechScriptEditor({
   speechText,
   onSpeechTextChange,
-  selectedLang,
   pacingSpeed,
   isSynthesizing,
   onSynthesize,

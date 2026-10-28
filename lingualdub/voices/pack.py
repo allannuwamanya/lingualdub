@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import re
 import tempfile
 import time
 import zipfile
@@ -26,9 +27,28 @@ from lingualdub.exceptions import StageExecutionError
 
 logger = logging.getLogger(__name__)
 
+# Voice IDs become filenames inside the voice store; keep them to a safe slug.
+_VOICE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
 
 class VoicePackError(StageExecutionError):
     """Raised when an African voice pack is invalid, corrupted, or lacks consent."""
+
+
+def _slugify_voice_id(value: str) -> str:
+    """Turn a display name into a safe, stable voice identifier."""
+    slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
+    return (slug or "voice")[:64].strip("_") or "voice"
+
+
+def validate_voice_id(voice_id: str) -> str:
+    """Validate a voice identifier before it is used as a filesystem name."""
+    if not isinstance(voice_id, str) or not _VOICE_ID_RE.fullmatch(voice_id):
+        raise VoicePackError(
+            f"Invalid voice_id {voice_id!r}: must match {_VOICE_ID_RE.pattern!r} "
+            "(lowercase letters, digits, '_' or '-')."
+        )
+    return voice_id
 
 
 @dataclass
@@ -78,6 +98,7 @@ class VoicePack:
         reference_audio_bytes: bytes,
         embedding: list[float],
     ) -> None:
+        validate_voice_id(metadata.voice_id)
         if not metadata.consent_basis or not metadata.consent_basis.strip():
             raise VoicePackError(
                 f"VoicePack '{metadata.name}' lacks a recorded consent_basis. "
@@ -192,7 +213,8 @@ class VoicePack:
         else:
             audio_bytes = audio_path_or_bytes
 
-        vid = voice_id or f"{name.lower().replace(' ', '_')}_{primary_language}"
+        vid = voice_id or f"{_slugify_voice_id(name)}_{primary_language}"
+        validate_voice_id(vid)
         meta = VoiceMetadata(
             voice_id=vid,
             name=name,

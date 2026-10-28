@@ -1,4 +1,3 @@
-import React from 'react';
 import { ShieldCheck, Lock } from 'lucide-react';
 
 interface ClonerConsentCardProps {

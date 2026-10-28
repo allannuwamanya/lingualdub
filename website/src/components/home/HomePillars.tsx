@@ -1,4 +1,3 @@
-import React from 'react';
 import { HardDrive, Sparkles, Radio, Film } from 'lucide-react';
 
 const PILLARS = [

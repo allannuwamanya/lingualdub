@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { HardwareInfo, VoiceOption } from '../types/studio';
 import { readSunbirdKey, SUNBIRD_KEY_EVENT } from '../lib/config';
+import { apiFetch } from '../lib/api';
 import { useAudioPlayback } from './useAudioPlayback';
 import { useVoiceStore } from './useVoiceStore';
 import {
@@ -70,19 +72,38 @@ export function StudioAudioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    fetch('/v1/system/probe')
+    let cancelled = false;
+
+    fetch('/health')
       .then((res) => {
-        const cType = res.headers.get('content-type') || '';
-        return res.ok && cType.includes('json') ? res.json() : Promise.reject();
+        if (!res.ok) throw new Error('offline');
+        return res.json();
       })
-      .then((data: HardwareInfo) => {
-        setHardware(data);
+      .then(() => {
+        if (cancelled) return;
         setBackendOnline(true);
+        return apiFetch('/v1/system/probe')
+          .then((res) => {
+            const cType = res.headers.get('content-type') || '';
+            return res.ok && cType.includes('json') ? res.json() : Promise.reject();
+          })
+          .then((data: HardwareInfo) => {
+            if (!cancelled) setHardware(data);
+          })
+          .catch(() => {
+            if (!cancelled) setHardware(null);
+          });
       })
       .catch(() => {
-        setHardware(null);
-        setBackendOnline(false);
+        if (!cancelled) {
+          setHardware(null);
+          setBackendOnline(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const speakBrowserVoice = (
@@ -99,11 +120,11 @@ export function StudioAudioProvider({ children }: { children: ReactNode }) {
       voice,
       sunbirdApiKey,
       playTrack: playback.playTrack,
-      speakFallback: () => {
+      speakFallback: (text) => {
         playback.setAudioTrackName(`${voice.name} (${voice.dialect || voice.language})`);
         playback.setAudioTrackLang(voice.language);
         playback.setAudioTrackEngine('Browser Voice');
-        speakBrowserVoice(voice.language, voice.gender, 1.0);
+        speakBrowserVoice(text, voice.language, voice.gender, 1.0);
       },
     });
   };

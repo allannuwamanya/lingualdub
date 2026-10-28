@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, AudioWaveform, Cpu, GitBranch, Globe2, Layers, Sliders } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

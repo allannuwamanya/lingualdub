@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
-import { MASTERING_PRESETS } from './mastering/masteringData';
+import { apiFetch } from '../../lib/api';
 import type { MasteringPreset } from './mastering/masteringData';
 import MasteringHeaderBanner from './mastering/MasteringHeaderBanner';
 import MasteringPresetsBar from './mastering/MasteringPresetsBar';
@@ -8,7 +8,7 @@ import MasteringControlsCard from './mastering/MasteringControlsCard';
 import MasteringMetersCard from './mastering/MasteringMetersCard';
 
 export default function MasteringRack() {
-  const { audioUrl, isPlaying, togglePlayPause, playTrack } = useStudioAudio();
+  const { audioUrl, isPlaying, togglePlayPause } = useStudioAudio();
 
   const [targetLufs, setTargetLufs] = useState(-14);
   const [duckRatio, setDuckRatio] = useState(-12);
@@ -64,7 +64,7 @@ export default function MasteringRack() {
   const handleRunMastering = async () => {
     setIsProcessing(true);
     try {
-      const res = await fetch('/v1/studio/master', {
+      const res = await apiFetch('/v1/studio/master', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

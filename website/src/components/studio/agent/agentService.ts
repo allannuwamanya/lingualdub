@@ -1,4 +1,5 @@
 import { SUPPORTED_AGENT_LANGS } from './agentData';
+import { apiFetch } from '../../../lib/api';
 
 export async function queryAgentResponse({
   userText,
@@ -14,7 +15,7 @@ export async function queryAgentResponse({
   let audioBase64: string | undefined = undefined;
 
   try {
-    const res = await fetch('/v1/agent/converse', {
+    const res = await apiFetch('/v1/agent/converse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

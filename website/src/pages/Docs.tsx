@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles } from 'lucide-react';
 import GithubIcon from '../components/GithubIcon';
 import DocsQuickstartCode from '../components/docs/DocsQuickstartCode';

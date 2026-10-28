@@ -159,6 +159,16 @@ AFRICAN_VOICE_PRESETS: dict[str, dict[str, Any]] = {
         "description": "Expressive isiZulu female voice with modern South African vocal style.",
         "pitch_freq": 240.0,
     },
+    "lungile_xho": {
+        "name": "Lungile",
+        "primary_language": "xho",
+        "gender": "female",
+        "dialect": "Eastern Cape isiXhosa",
+        "age_group": "adult",
+        "style_tags": ["warm", "clear", "traditional"],
+        "description": "Warm isiXhosa female voice with authentic Eastern Cape inflection.",
+        "pitch_freq": 235.0,
+    },
     "bekele_amh": {
         "name": "Bekele",
         "primary_language": "amh",
@@ -228,6 +238,16 @@ AFRICAN_VOICE_PRESETS: dict[str, dict[str, Any]] = {
         "style_tags": ["rhythmic", "vibrant", "commercial"],
         "description": "Rhythmic Senegalese Wolof male voice suited for commercial dubbing.",
         "pitch_freq": 172.0,
+    },
+    "kabila_lin": {
+        "name": "Kabila",
+        "primary_language": "lin",
+        "gender": "male",
+        "dialect": "Kinshasa Lingala",
+        "age_group": "adult",
+        "style_tags": ["rhythmic", "modern", "storyteller"],
+        "description": "Modern Kinshasa Lingala male voice with natural rhythmic cadence.",
+        "pitch_freq": 168.0,
     },
     "okello_ach": {
         "name": "Okello",

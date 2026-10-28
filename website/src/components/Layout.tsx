@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { BookOpen, ExternalLink, ArrowLeft, X } from 'lucide-react';
 import TopLoadingBar from './TopLoadingBar';
-import { readSunbirdKey, SUNBIRD_KEY_EVENT, SUNBIRD_KEY_STORAGE } from '../lib/config';
+import {
+  readServerKey,
+  readSunbirdKey,
+  SERVER_KEY_EVENT,
+  SERVER_KEY_STORAGE,
+  SUNBIRD_KEY_EVENT,
+  SUNBIRD_KEY_STORAGE,
+} from '../lib/config';
 import { STUDIO_PATHS, type ServerState } from './layout/layoutConfig';
 import StudioNav from './layout/StudioNav';
 import StudioHeader from './layout/StudioHeader';
@@ -15,6 +22,7 @@ export default function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
   const [savedKey, setSavedKey] = useState<string>(() => readSunbirdKey());
+  const [savedServerKey, setSavedServerKey] = useState<string>(() => readServerKey());
   const [server, setServer] = useState<ServerState>('checking');
   const keyTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -22,10 +30,9 @@ export default function Layout() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/v1/system/probe')
+    fetch('/health')
       .then((res) => {
-        const type = res.headers.get('content-type') || '';
-        if (!res.ok || !type.includes('json')) throw new Error('offline');
+        if (!res.ok) throw new Error('offline');
         return res.json();
       })
       .then(() => !cancelled && setServer('online'))
@@ -37,11 +44,16 @@ export default function Layout() {
 
   useEffect(() => {
     const sync = () => setSavedKey(readSunbirdKey());
+    const syncServer = () => setSavedServerKey(readServerKey());
     window.addEventListener(SUNBIRD_KEY_EVENT, sync);
+    window.addEventListener(SERVER_KEY_EVENT, syncServer);
     window.addEventListener('storage', sync);
+    window.addEventListener('storage', syncServer);
     return () => {
       window.removeEventListener(SUNBIRD_KEY_EVENT, sync);
+      window.removeEventListener(SERVER_KEY_EVENT, syncServer);
       window.removeEventListener('storage', sync);
+      window.removeEventListener('storage', syncServer);
     };
   }, []);
 
@@ -56,6 +68,14 @@ export default function Layout() {
     else localStorage.removeItem(SUNBIRD_KEY_STORAGE);
     setSavedKey(readSunbirdKey());
     window.dispatchEvent(new Event(SUNBIRD_KEY_EVENT));
+  };
+
+  const persistServerKey = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed) localStorage.setItem(SERVER_KEY_STORAGE, trimmed);
+    else localStorage.removeItem(SERVER_KEY_STORAGE);
+    setSavedServerKey(readServerKey());
+    window.dispatchEvent(new Event(SERVER_KEY_EVENT));
   };
 
   const cloudConnected = Boolean(savedKey);
@@ -164,7 +184,9 @@ export default function Layout() {
           keyTriggerRef.current?.focus();
         }}
         savedKey={savedKey}
+        savedServerKey={savedServerKey}
         onSaveKey={persistKey}
+        onSaveServerKey={persistServerKey}
       />
     </div>
   );

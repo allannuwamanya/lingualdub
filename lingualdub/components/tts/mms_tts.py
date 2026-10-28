@@ -142,10 +142,12 @@ class MMSTTSComponent(TTSComponent):
         self.output_dir.mkdir(parents=True, exist_ok=True)
         artifacts = list(input.artifacts)
         warnings = list(input.warnings)
+        out_segments = []
 
         for idx, seg in enumerate(input.segments):
             text = (seg.text or "").strip()
             if not text:
+                out_segments.append(seg)
                 continue
 
             # Annotate fitting strategy via single source of truth
@@ -155,20 +157,23 @@ class MMSTTSComponent(TTSComponent):
             target_dur = seg.metadata.get("target_duration", seg.duration)
             strategy = choose_strategy(ratio, text)
 
-            seg.metadata["fitting_strategy"] = strategy.value
-            seg.metadata["target_duration"] = round(float(target_dur), 4)
-            seg.metadata["source_segment_index"] = idx
+            new_meta = dict(seg.metadata)
+            new_meta["fitting_strategy"] = strategy.value
+            new_meta["target_duration"] = round(float(target_dur), 4)
+            new_meta["source_segment_index"] = idx
 
             if strategy == FittingStrategy.SKIP:
-                seg.metadata["unfit"] = True
+                new_meta["unfit"] = True
                 warnings.append(
                     f"MMS-TTS segment #{idx} skipped (duration_ratio={ratio:.2f} exceeds threshold)"
                 )
+                out_segments.append(seg.replace(metadata=new_meta))
                 continue
 
             try:
                 inputs = self._tokenizer(text, return_tensors="pt")
                 if inputs["input_ids"].shape[-1] == 0:
+                    out_segments.append(seg.replace(metadata=new_meta))
                     continue
 
                 inputs = {k: v.to(self._model.device) for k, v in inputs.items()}
@@ -187,9 +192,10 @@ class MMSTTSComponent(TTSComponent):
             except Exception as exc:
                 logger.warning("MMS-TTS synthesis failed on segment #%d (%r): %s", idx, text, exc)
                 warnings.append(f"MMS-TTS synthesis failed on segment #{idx}: {exc}")
+            out_segments.append(seg.replace(metadata=new_meta))
 
         return Result(
-            segments=list(input.segments),
+            segments=out_segments,
             source_language=input.source_language,
             target_language=input.target_language,
             warnings=warnings,

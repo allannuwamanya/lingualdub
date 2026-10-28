@@ -1,4 +1,3 @@
-import React from 'react';
 import { Languages, ArrowLeftRight, RefreshCw } from 'lucide-react';
 import CustomSelect, { type SelectOption } from '../CustomSelect';
 

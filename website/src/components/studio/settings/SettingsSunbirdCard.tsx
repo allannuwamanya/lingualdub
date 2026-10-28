@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Globe, Eye, EyeOff, CheckCircle2, XCircle, Zap, RefreshCw } from 'lucide-react';
 
 interface SettingsSunbirdCardProps {

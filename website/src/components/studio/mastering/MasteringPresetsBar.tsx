@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { MASTERING_PRESETS } from './masteringData';
 import type { MasteringPreset } from './masteringData';

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { VoiceOption } from '../types/studio';
 import { PRESET_VOICES } from '../types/studio';
+import { apiFetch } from '../lib/api';
 
 export function useVoiceStore() {
   const [voices, setVoices] = useState<VoiceOption[]>(PRESET_VOICES);
@@ -43,7 +44,7 @@ export function useVoiceStore() {
 
   // Sync with backend voices API
   useEffect(() => {
-    fetch('/v1/voices')
+    apiFetch('/v1/voices')
       .then((res) => {
         const cType = res.headers.get('content-type') || '';
         return res.ok && cType.includes('json') ? res.json() : Promise.reject();

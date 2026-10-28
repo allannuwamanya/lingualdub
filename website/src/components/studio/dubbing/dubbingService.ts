@@ -1,3 +1,5 @@
+import { apiFetch } from '../../../lib/api';
+
 export const DUBBING_FALLBACK_TRANSLATIONS: Record<string, string> = {
   lug: "Tukusanyukidde mu buweereza bwaffe obw'obulamu obw'omulembe. Mwatuula wansi nga tukyusa amawulire gammwe.",
   swa: 'Karibu kwenye huduma zetu za kisasa za afya. Tafadhali keti wakati tukisajili maelezo yako.',
@@ -30,7 +32,7 @@ export async function translateDialogue({
 
   // 1. Try local server
   try {
-    const res = await fetch('/v1/translate', {
+    const res = await apiFetch('/v1/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

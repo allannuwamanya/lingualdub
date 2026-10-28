@@ -5,22 +5,28 @@ interface ApiKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
   savedKey: string;
+  savedServerKey: string;
   onSaveKey: (key: string) => void;
+  onSaveServerKey: (key: string) => void;
 }
 
 export default function ApiKeyModal({
   isOpen,
   onClose,
   savedKey,
+  savedServerKey,
   onSaveKey,
+  onSaveServerKey,
 }: ApiKeyModalProps) {
   const [keyInput, setKeyInput] = useState('');
+  const [serverKeyInput, setServerKeyInput] = useState('');
   const [justSaved, setJustSaved] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     setKeyInput(savedKey);
+    setServerKeyInput(savedServerKey);
     inputRef.current?.focus();
 
     const onKey = (e: KeyboardEvent) => {
@@ -28,13 +34,14 @@ export default function ApiKeyModal({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, savedKey, onClose]);
+  }, [isOpen, savedKey, savedServerKey, onClose]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSaveKey(keyInput);
+    onSaveServerKey(serverKeyInput);
     setJustSaved(true);
     window.setTimeout(() => {
       setJustSaved(false);
@@ -44,7 +51,9 @@ export default function ApiKeyModal({
 
   const handleRemove = () => {
     setKeyInput('');
+    setServerKeyInput('');
     onSaveKey('');
+    onSaveServerKey('');
   };
 
   return (
@@ -63,11 +72,12 @@ export default function ApiKeyModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 id="key-dialog-title" className="text-lg font-semibold text-white">
-              Sunbird API key
+              API credentials
             </h2>
             <p className="mt-1 text-sm text-slate-400 leading-relaxed">
-              Enables cloud speech and translation for Luganda, Runyankore, Acholi, Ateso and more. The key
-              is stored only in this browser.
+              Sunbird enables cloud speech and translation. The LingualDub server key is only needed when
+              the backend is protected with <code className="font-mono text-slate-300">LINGUALDUB_API_KEY</code>.
+              Both are stored only in this browser.
             </p>
           </div>
           <button
@@ -83,7 +93,7 @@ export default function ApiKeyModal({
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
             <label htmlFor="sunbird-key" className="block text-sm font-medium text-slate-200 mb-1.5">
-              Authorization token
+              Sunbird authorization token
             </label>
             <input
               id="sunbird-key"
@@ -98,10 +108,26 @@ export default function ApiKeyModal({
             />
           </div>
 
+          <div>
+            <label htmlFor="server-key" className="block text-sm font-medium text-slate-200 mb-1.5">
+              LingualDub server key <span className="text-slate-500">(optional)</span>
+            </label>
+            <input
+              id="server-key"
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              value={serverKeyInput}
+              onChange={(e) => setServerKeyInput(e.target.value)}
+              placeholder="LINGUALDUB_API_KEY value"
+              className="w-full h-12 rounded-xl bg-[#070b14] px-4 text-base text-slate-100 font-mono placeholder:text-slate-500 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 transition-all"
+            />
+          </div>
+
           {justSaved && (
             <p role="status" className="flex items-center gap-2 text-sm text-emerald-300">
               <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-              Saved. Cloud voices are now active.
+              Saved. Credentials are now active.
             </p>
           )}
 
@@ -126,7 +152,7 @@ export default function ApiKeyModal({
                 type="submit"
                 className="h-10 px-4 rounded-lg text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-400 outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 cursor-pointer"
               >
-                Save key
+                Save credentials
               </button>
             </div>
           </div>

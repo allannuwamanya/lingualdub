@@ -181,21 +181,17 @@ class MCPServer:
             ]
 
         elif name == "lingualdub_translate_text":
-            from lingualdub.components.translation.dummy import DummyTranslationComponent
-            from lingualdub.core.result import Result
-            from lingualdub.core.segment import Segment
-
             src = args["source_language"]
             tgt = args["target_language"]
-            comp = DummyTranslationComponent(source_language=src, target_language=tgt)
-            res = comp.run(
-                Result(
-                    segments=[Segment(start=0.0, end=2.0, text=args["text"], language=src)],
-                    source_language=src,
-                )
+            result = self.speech_handler.handle_translate(
+                {
+                    "text": args["text"],
+                    "source_language": src,
+                    "target_language": tgt,
+                    "api_key": args.get("api_key"),
+                }
             )
-            trans_text = res.segments[0].text if res.segments else args["text"]
-            return [{"type": "text", "text": trans_text}]
+            return [{"type": "text", "text": result["translated_text"]}]
 
         raise ValueError(f"Unknown tool: {name}")
 

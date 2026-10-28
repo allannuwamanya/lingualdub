@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStudioAudio } from '../../context/StudioAudioContext';
+import { apiFetch } from '../../lib/api';
 import type { ModelItem } from '../../types/studio';
 import { FALLBACK_MODELS } from './models/modelData';
 import ModelHubHeaderBanner from './models/ModelHubHeaderBanner';
@@ -8,7 +9,7 @@ import ModelFilterToolbar from './models/ModelFilterToolbar';
 import ModelCard from './models/ModelCard';
 
 export default function ModelHub() {
-  const { hardware } = useStudioAudio();
+  const { hardware, setNotice } = useStudioAudio();
   const [models, setModels] = useState<ModelItem[]>(FALLBACK_MODELS);
   const [pullingModelId, setPullingModelId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +20,7 @@ export default function ModelHub() {
   const fetchModels = async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch('/v1/models');
+      const res = await apiFetch('/v1/models');
       const cType = res.headers.get('content-type') || '';
       if (res.ok && cType.includes('json')) {
         const data = await res.json();
@@ -37,38 +38,41 @@ export default function ModelHub() {
 
   const handlePullModel = async (modelId: string) => {
     setPullingModelId(modelId);
+    setNotice(null);
     try {
-      const res = await fetch('/v1/models/pull', {
+      const res = await apiFetch('/v1/models/pull', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model_id: modelId }),
       });
-      if (res.ok) await fetchModels();
-    } catch {}
-    setTimeout(() => {
-      setModels((prev) =>
-        prev.map((m) =>
-          m.model_id === modelId
-            ? { ...m, is_downloaded: true, local_path: `~/.cache/lingualdub/models/${modelId}.bin` }
-            : m
-        )
-      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      await fetchModels();
+    } catch (err) {
+      setNotice(`Could not pull ${modelId}: ${err instanceof Error ? err.message : 'unknown error'}`);
+    } finally {
       setPullingModelId(null);
-    }, 1200);
+    }
   };
 
   const handleRemoveModel = async (modelId: string) => {
+    setNotice(null);
     try {
-      const res = await fetch('/v1/models/remove', {
+      const res = await apiFetch('/v1/models/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model_id: modelId }),
       });
-      if (res.ok) await fetchModels();
-    } catch {}
-    setModels((prev) =>
-      prev.map((m) => (m.model_id === modelId ? { ...m, is_downloaded: false, local_path: null } : m))
-    );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.deleted) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      await fetchModels();
+    } catch (err) {
+      setNotice(`Could not remove ${modelId}: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
   };
 
   const totalDiskUsedMb = useMemo(() => {

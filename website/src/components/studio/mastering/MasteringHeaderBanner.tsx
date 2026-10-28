@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sliders, RotateCcw } from 'lucide-react';
 
 interface MasteringHeaderBannerProps {
